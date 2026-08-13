@@ -1,0 +1,41 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" routerLink="/">Jaffna Day-Visit Planner</a>
+    <button class="navbar-toggler" type="button" (click)="navOpen = !navOpen">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" [class.show]="navOpen">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Places</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/map" routerLinkActive="active">Map</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/planner" routerLinkActive="active">
+            My Day Plan
+            @if (planCount() > 0) {
+              <span class="badge bg-light text-primary rounded-pill ms-1">{{ planCount() }}</span>
+            }
+          </a>
+        </li>
+        <li class="nav-item">
+          @if (isAdmin()) {
+            <a class="nav-link" routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
+          } @else {
+            <a class="nav-link" routerLink="/admin/login" routerLinkActive="active">Admin Login</a>
+          }
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <router-outlet />
+</main>
+
+<footer class="text-center text-muted py-4 small">
+  ITE2953 Group Project — Jaffna Day-Visit Planner and Information System
+</footer>

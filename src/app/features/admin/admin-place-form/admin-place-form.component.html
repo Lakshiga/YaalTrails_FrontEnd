@@ -1,0 +1,64 @@
+<a routerLink="/admin" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to dashboard</a>
+
+<h1 class="h4 mb-4">{{ isEditMode() ? 'Edit Place' : 'Add New Place' }}</h1>
+
+@if (errorMessage()) {
+  <div class="alert alert-danger">{{ errorMessage() }}</div>
+}
+
+<form (ngSubmit)="submit()" class="row g-3">
+  <div class="col-md-8">
+    <label class="form-label" for="name">Place Name</label>
+    <input id="name" name="name" class="form-control" [(ngModel)]="form.name" required />
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="category">Category</label>
+    <select id="category" name="category" class="form-select" [(ngModel)]="form.category" required>
+      @for (cat of categories; track cat) {
+        <option [value]="cat">{{ cat }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="col-12">
+    <label class="form-label" for="description">Description</label>
+    <textarea id="description" name="description" class="form-control" rows="3" [(ngModel)]="form.description" required></textarea>
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label" for="openingHours">Opening Hours</label>
+    <input id="openingHours" name="openingHours" class="form-control" [(ngModel)]="form.openingHours" required placeholder="e.g. 8:00 AM - 6:00 PM daily" />
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label" for="visitDuration">Estimated Visit Duration</label>
+    <input id="visitDuration" name="visitDuration" class="form-control" [(ngModel)]="form.visitDuration" required placeholder="e.g. 45 mins - 1 hour" />
+  </div>
+
+  <div class="col-12">
+    <label class="form-label" for="travelTips">Travel Tips</label>
+    <textarea id="travelTips" name="travelTips" class="form-control" rows="2" [(ngModel)]="form.travelTips" required></textarea>
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="latitude">Latitude</label>
+    <input id="latitude" name="latitude" type="number" step="0.0001" class="form-control" [(ngModel)]="form.latitude" required />
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="longitude">Longitude</label>
+    <input id="longitude" name="longitude" type="number" step="0.0001" class="form-control" [(ngModel)]="form.longitude" required />
+  </div>
+
+  <div class="col-md-4">
+    <label class="form-label" for="imageUrl">Image URL (optional)</label>
+    <input id="imageUrl" name="imageUrl" class="form-control" [(ngModel)]="form.imageUrl" placeholder="https://…" />
+  </div>
+
+  <div class="col-12 mt-4">
+    <button type="submit" class="btn btn-primary" [disabled]="loading()">
+      {{ loading() ? 'Saving…' : (isEditMode() ? 'Save Changes' : 'Create Place') }}
+    </button>
+  </div>
+</form>

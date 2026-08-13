@@ -1,0 +1,47 @@
+<h1 class="h3 mb-3">My One-Day Visit Plan</h1>
+
+@if (visitPlan.plan().length === 0) {
+  <div class="alert alert-info">
+    You haven't added any places yet. Browse <a routerLink="/">places of interest</a> and click "+ Add to Plan" on the ones you'd like to visit.
+  </div>
+} @else {
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <ol class="list-group list-group-numbered mb-4">
+        @for (place of visitPlan.plan(); track place.id; let first = $first; let last = $last) {
+          <li class="list-group-item d-flex justify-content-between align-items-start">
+            <div class="ms-2 me-auto">
+              <a [routerLink]="['/places', place.id]" class="fw-semibold text-decoration-none">{{ place.name }}</a>
+              <div class="small text-muted">
+                {{ place.category }} &middot; {{ place.distanceFromHomeKm }} km from home &middot; ~{{ place.visitDuration }}
+              </div>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary" [disabled]="first" (click)="visitPlan.moveUp(place.id)" title="Move earlier">↑</button>
+              <button type="button" class="btn btn-outline-secondary" [disabled]="last" (click)="visitPlan.moveDown(place.id)" title="Move later">↓</button>
+              <button type="button" class="btn btn-outline-danger" (click)="visitPlan.remove(place.id)" title="Remove from plan">✕</button>
+            </div>
+          </li>
+        }
+      </ol>
+
+      <div class="card bg-light">
+        <div class="card-body">
+          <h2 class="h6">Plan Summary</h2>
+          <p class="mb-1">Places to visit: <strong>{{ visitPlan.plan().length }}</strong></p>
+          <p class="mb-1">Estimated total visit time: <strong>{{ formatMinutes(visitPlan.totalVisitMinutes()) }}</strong></p>
+          <p class="mb-0">Combined distance from home: <strong>{{ visitPlan.totalDistanceKm() }} km</strong></p>
+          <p class="small text-muted mt-2 mb-0">
+            Tip: use the ↑ / ↓ buttons to arrange places in a sensible visiting order for your day.
+          </p>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-outline-danger btn-sm mt-3" (click)="visitPlan.clear()">Clear entire plan</button>
+    </div>
+
+    <div class="col-lg-5">
+      <app-leaflet-map [places]="visitPlan.plan()" height="450px" />
+    </div>
+  </div>
+}

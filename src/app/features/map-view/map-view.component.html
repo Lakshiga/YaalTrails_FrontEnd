@@ -1,0 +1,17 @@
+<h1 class="h3 mb-3">Map of All Places</h1>
+<p class="text-muted">🏠 marks the home reference point (Jaffna town). Click a pin to see the place name and distance.</p>
+
+@if (loading()) {
+  <p class="text-muted">Loading map…</p>
+} @else {
+  <app-leaflet-map [places]="places()" height="550px" />
+
+  <div class="list-group mt-4">
+    @for (place of places(); track place.id) {
+      <a [routerLink]="['/places', place.id]" class="list-group-item list-group-item-action d-flex justify-content-between">
+        <span>{{ place.name }} <span class="text-muted small">({{ place.category }})</span></span>
+        <span class="badge text-bg-light">{{ place.distanceFromHomeKm }} km</span>
+      </a>
+    }
+  </div>
+}

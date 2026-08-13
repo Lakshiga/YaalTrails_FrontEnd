@@ -1,0 +1,48 @@
+@if (loading()) {
+  <p class="text-muted">Loading place details…</p>
+}
+
+@if (notFound()) {
+  <div class="alert alert-warning">Place not found.</div>
+  <a routerLink="/" class="btn btn-outline-primary">Back to all places</a>
+}
+
+@if (place(); as p) {
+  <a routerLink="/" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to all places</a>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <span class="badge text-bg-secondary mb-2">{{ p.category }}</span>
+      <h1 class="h3">{{ p.name }}</h1>
+      <p>{{ p.description }}</p>
+
+      <dl class="row mt-4">
+        <dt class="col-sm-4">Opening Hours</dt>
+        <dd class="col-sm-8">{{ p.openingHours }}</dd>
+
+        <dt class="col-sm-4">Distance from Home</dt>
+        <dd class="col-sm-8">{{ p.distanceFromHomeKm }} km</dd>
+
+        <dt class="col-sm-4">Estimated Visit Duration</dt>
+        <dd class="col-sm-8">{{ p.visitDuration }}</dd>
+
+        <dt class="col-sm-4">Travel Tips</dt>
+        <dd class="col-sm-8">{{ p.travelTips }}</dd>
+      </dl>
+
+      <button
+        type="button"
+        class="btn"
+        [class.btn-success]="isInPlan()"
+        [class.btn-primary]="!isInPlan()"
+        (click)="toggleInPlan()"
+      >
+        {{ isInPlan() ? '✓ Added to your Day Plan' : '+ Add to your Day Plan' }}
+      </button>
+    </div>
+
+    <div class="col-lg-5">
+      <app-leaflet-map [places]="[p]" height="350px" />
+    </div>
+  </div>
+}

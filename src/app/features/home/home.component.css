@@ -1,0 +1,36 @@
+.place-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.place-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.place-card-banner {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.place-card-banner[data-category='Religious'] {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+}
+
+.place-card-banner[data-category='Heritage'] {
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
+}
+
+.place-card-banner[data-category='Cultural'] {
+  background: linear-gradient(135deg, #eb3349, #f45c43);
+}
+
+.place-card-banner[data-category='Nature'] {
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+}
