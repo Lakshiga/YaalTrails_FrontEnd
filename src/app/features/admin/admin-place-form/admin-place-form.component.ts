@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PlaceService } from '../../../core/services/place.service';
@@ -26,6 +26,7 @@ const EMPTY_FORM: PlaceUpsert = {
   standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './admin-place-form.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './admin-place-form.component.css'
 })
 export class AdminPlaceFormComponent implements OnInit {

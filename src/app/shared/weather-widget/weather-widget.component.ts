@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, computed, inject, input } from '@angular/core';
+import { Component, Input, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { WeatherService, weatherInfo } from '../../core/services/weather.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -62,6 +62,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
       <div class="wx-day surface wx-unavailable"><i class="bi bi-cloud-slash"></i> {{ i18n.t('weather.unavailable') }}</div>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       :host { display: block; }

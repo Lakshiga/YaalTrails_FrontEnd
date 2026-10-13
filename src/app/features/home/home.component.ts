@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PlaceService } from '../../core/services/place.service';
 import { VisitPlanService } from '../../core/services/visit-plan.service';
@@ -14,6 +14,7 @@ import { WeatherWidgetComponent } from '../../shared/weather-widget/weather-widg
   standalone: true,
   imports: [RouterLink, StarRatingComponent, WeatherWidgetComponent],
   templateUrl: './home.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements OnInit {

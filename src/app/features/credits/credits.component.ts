@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PlaceService } from '../../core/services/place.service';
 import { Place } from '../../core/models/place.model';
@@ -39,6 +39,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
       </p>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .credit-list { padding: 0.5rem; }

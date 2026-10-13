@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PlaceService } from '../../core/services/place.service';
 import { Place } from '../../core/models/place.model';
@@ -11,6 +11,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
   standalone: true,
   imports: [RouterLink, LeafletMapComponent],
   templateUrl: './map-view.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './map-view.component.css'
 })
 export class MapViewComponent implements OnInit {

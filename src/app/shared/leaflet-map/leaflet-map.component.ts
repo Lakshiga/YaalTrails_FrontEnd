@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, NgZone, OnChanges, OnDestroy, SimpleChanges, ViewChild, effect, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, NgZone, OnChanges, OnDestroy, SimpleChanges, ViewChild, effect, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import * as L from 'leaflet';
 import { Place } from '../../core/models/place.model';
@@ -35,6 +35,7 @@ const homeIcon = L.divIcon({
   selector: 'app-leaflet-map',
   standalone: true,
   template: `<div #mapContainer class="leaflet-map-container" [style.height]="height"></div>`,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       :host { display: block; }

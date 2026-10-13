@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, ChangeDetectionStrategy } from '@angular/core';
 
 /** Read-only star display, or a 1–5 picker when `editable` is set. */
 @Component({
@@ -29,6 +29,7 @@ import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
       </span>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       :host { display: inline-flex; }

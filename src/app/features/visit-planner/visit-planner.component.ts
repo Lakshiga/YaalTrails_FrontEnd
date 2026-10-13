@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { VisitPlanService } from '../../core/services/visit-plan.service';
 import { PlaceService } from '../../core/services/place.service';
@@ -15,6 +15,7 @@ import { Place } from '../../core/models/place.model';
   standalone: true,
   imports: [RouterLink, LeafletMapComponent, WeatherWidgetComponent],
   templateUrl: './visit-planner.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './visit-planner.component.css'
 })
 export class VisitPlannerComponent implements OnInit {

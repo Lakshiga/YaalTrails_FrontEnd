@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PlaceService } from '../../../core/services/place.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,6 +12,7 @@ import { ALL_CATEGORIES, categoryIcon } from '../../../core/models/category-meta
   standalone: true,
   imports: [RouterLink, StarRatingComponent],
   templateUrl: './admin-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './admin-dashboard.component.css'
 })
 export class AdminDashboardComponent implements OnInit {

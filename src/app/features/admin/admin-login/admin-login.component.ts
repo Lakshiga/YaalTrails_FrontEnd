@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './admin-login.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './admin-login.component.css'
 })
 export class AdminLoginComponent {
