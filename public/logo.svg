@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Yaal Trails logo">
+  <defs>
+    <linearGradient id="yt-pin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16706a"/>
+      <stop offset="1" stop-color="#0a3a38"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 2.5C19 2.5 8.5 12.8 8.5 25.6 8.5 43 32 61.5 32 61.5S55.5 43 55.5 25.6C55.5 12.8 45 2.5 32 2.5z" fill="url(#yt-pin)"/>
+  <circle cx="39.5" cy="22" r="8" fill="#f0a04b"/>
+  <path d="M30.6 45.5c.3-7.6 1.2-14.6 3.2-21.3" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <g fill="#fff">
+    <path d="M33.8 23.6c-5.2-4.6-11-5.2-15.3-2.4 5-.6 10.2.6 15.3 2.4z"/>
+    <path d="M33.8 23.6c-3-6.8-8-10.4-13.2-10.2 5 1.6 9.6 5.2 13.2 10.2z"/>
+    <path d="M33.8 23.6c.4-7.2 3.2-11.8 7.6-13.4-3 3.6-5.6 8-7.6 13.4z"/>
+    <path d="M33.8 23.6c5.4-4.8 10.8-5.4 14.6-2.6-4.8-.4-9.8.8-14.6 2.6z"/>
+    <path d="M33.8 23.6c4.8-1.4 9.8.4 12.2 4.8-3.8-2.6-7.8-3.8-12.2-4.8z"/>
+    <path d="M33.8 23.6c-4.8-.8-9.4 1.4-11.4 5.8 3.6-2.8 7.4-4.4 11.4-5.8z"/>
+  </g>
+  <path d="M20.5 46.5c7.6-3.4 15.4-3.4 23 0" stroke="#f0a04b" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>

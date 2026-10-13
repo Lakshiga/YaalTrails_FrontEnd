@@ -1,41 +1,113 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-  <div class="container">
-    <a class="navbar-brand fw-bold" routerLink="/">Jaffna Day-Visit Planner</a>
-    <button class="navbar-toggler" type="button" (click)="navOpen = !navOpen">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" [class.show]="navOpen">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Places</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/map" routerLinkActive="active">Map</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/planner" routerLinkActive="active">
-            My Day Plan
-            @if (planCount() > 0) {
-              <span class="badge bg-light text-primary rounded-pill ms-1">{{ planCount() }}</span>
-            }
-          </a>
-        </li>
-        <li class="nav-item">
-          @if (isAdmin()) {
-            <a class="nav-link" routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
-          } @else {
-            <a class="nav-link" routerLink="/admin/login" routerLinkActive="active">Admin Login</a>
-          }
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<header class="site-header">
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="brand" routerLink="/" (click)="navOpen = false">
+        <img class="brand-logo" src="logo.svg" alt="" width="40" height="40" />
+        <span class="brand-text">
+          <span class="brand-name">{{ appName }}</span>
+          <span class="brand-sub">{{ i18n.t('brand.tagline') }}</span>
+        </span>
+      </a>
 
-<main class="container py-4">
+      <div class="d-flex align-items-center gap-2 d-lg-none">
+        <ng-container *ngTemplateOutlet="langSwitch" />
+        <button class="nav-toggle" type="button" (click)="navOpen = !navOpen" [attr.aria-expanded]="navOpen" [attr.aria-label]="i18n.t('nav.toggle')">
+          <i class="bi" [class.bi-list]="!navOpen" [class.bi-x-lg]="navOpen"></i>
+        </button>
+      </div>
+
+      <div class="collapse navbar-collapse" [class.show]="navOpen">
+        <ul class="nav-links ms-auto">
+          <li>
+            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="navOpen = false">
+              <i class="bi bi-grid"></i> {{ i18n.t('nav.explore') }}
+            </a>
+          </li>
+          <li>
+            <a routerLink="/map" routerLinkActive="active" (click)="navOpen = false">
+              <i class="bi bi-map"></i> {{ i18n.t('nav.map') }}
+            </a>
+          </li>
+          <li>
+            <a routerLink="/planner" routerLinkActive="active" (click)="navOpen = false">
+              <i class="bi bi-calendar2-check"></i> {{ i18n.t('nav.plan') }}
+              @if (planCount() > 0) {
+                <span class="nav-count">{{ planCount() }}</span>
+              }
+            </a>
+          </li>
+          <li class="nav-divider d-none d-lg-block"></li>
+          <li class="d-none d-lg-block">
+            <ng-container *ngTemplateOutlet="langSwitch" />
+          </li>
+          <li>
+            @if (isAdmin()) {
+              <a routerLink="/admin" routerLinkActive="active" class="nav-admin" (click)="navOpen = false">
+                <i class="bi bi-speedometer2"></i> {{ i18n.t('nav.dashboard') }}
+              </a>
+            } @else {
+              <a routerLink="/admin/login" routerLinkActive="active" class="nav-admin" (click)="navOpen = false">
+                <i class="bi bi-shield-lock"></i> {{ i18n.t('nav.admin') }}
+              </a>
+            }
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<ng-template #langSwitch>
+  <div class="lang-switch" role="group" [attr.aria-label]="i18n.t('lang.label')">
+    <button type="button" [class.active]="i18n.lang() === 'en'" (click)="i18n.setLang('en')" lang="en">EN</button>
+    <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="i18n.setLang('ta')" lang="ta">தமிழ்</button>
+  </div>
+</ng-template>
+
+<main class="site-main">
   <router-outlet />
 </main>
 
-<footer class="text-center text-muted py-4 small">
-  ITE2953 Group Project — Jaffna Day-Visit Planner and Information System
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="brand brand-light mb-3">
+          <span class="brand-logo-tile"><img src="logo.svg" alt="" width="34" height="34" /></span>
+          <span class="brand-text">
+            <span class="brand-name">{{ appName }}</span>
+            <span class="brand-sub">{{ i18n.t('brand.tagline') }}</span>
+          </span>
+        </div>
+        <p class="footer-copy">{{ i18n.t('footer.about') }}</p>
+      </div>
+      <div class="col-6 col-lg-3 offset-lg-1">
+        <h6>{{ i18n.t('footer.explore') }}</h6>
+        <ul class="footer-links">
+          <li><a routerLink="/">{{ i18n.t('footer.allPlaces') }}</a></li>
+          <li><a routerLink="/map">{{ i18n.t('footer.map') }}</a></li>
+          <li><a routerLink="/planner">{{ i18n.t('footer.plan') }}</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-3">
+        <h6>{{ i18n.t('footer.project') }}</h6>
+        <ul class="footer-links">
+          <li>{{ i18n.t('footer.course') }}</li>
+          <li>SH_Group_49</li>
+          <li><a routerLink="/credits">{{ i18n.t('footer.credits') }}</a></li>
+          <li><a routerLink="/admin/login">{{ i18n.t('footer.adminAccess') }}</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; {{ year }} {{ appName }} — {{ i18n.t('footer.system') }}</span>
+      <span>{{ i18n.t('footer.mapData') }}</span>
+    </div>
+  </div>
 </footer>
+
+<div class="toast-stack" aria-live="polite">
+  @for (t of toasts(); track t.id) {
+    <div class="toast-item" role="status"><i class="bi" [class]="t.icon"></i> {{ t.message }}</div>
+  }
+</div>

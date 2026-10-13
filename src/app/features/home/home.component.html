@@ -1,69 +1,152 @@
-<div class="mb-4">
-  <h1 class="h3">Places of Interest near Jaffna</h1>
-  <p class="text-muted">Browse places within a 25 km radius, filter by category, and add them to your one-day visit plan.</p>
-</div>
+<section class="hero">
+  <div class="hero-pattern" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <div class="hero-copy">
+      <span class="hero-eyebrow"><i class="bi bi-geo-alt-fill"></i> {{ i18n.t('home.region') }}</span>
+      <h1 class="hero-title">{{ i18n.t('home.title') }}</h1>
+      <p class="hero-lead">{{ i18n.t('home.lead') }}</p>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-accent btn-lg" (click)="scrollToPlaces()">
+          {{ i18n.t('home.explore') }} <i class="bi bi-arrow-down"></i>
+        </button>
+        <a routerLink="/map" class="btn btn-ghost-light btn-lg"><i class="bi bi-map"></i> {{ i18n.t('home.viewMap') }}</a>
+      </div>
+    </div>
 
-<div class="mb-4 d-flex flex-wrap gap-2">
-  <button
-    type="button"
-    class="btn btn-sm"
-    [class.btn-primary]="selectedCategory() === 'All'"
-    [class.btn-outline-primary]="selectedCategory() !== 'All'"
-    (click)="selectCategory('All')"
-  >
-    All
-  </button>
-  @for (cat of categories(); track cat) {
-    <button
-      type="button"
-      class="btn btn-sm"
-      [class.btn-primary]="selectedCategory() === cat"
-      [class.btn-outline-primary]="selectedCategory() !== cat"
-      (click)="selectCategory(cat)"
-    >
-      {{ cat }}
+    <div class="hero-side">
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-value">{{ loading() ? '–' : allPlaces().length }}</span>
+          <span class="hero-stat-label">{{ i18n.t('home.statPlaces') }}</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">{{ loading() ? '–' : categories().length }}</span>
+          <span class="hero-stat-label">{{ i18n.t('home.statCategories') }}</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">25<small>{{ i18n.t('unit.km') }}</small></span>
+          <span class="hero-stat-label">{{ i18n.t('home.statRadius') }}</span>
+        </div>
+        <a routerLink="/planner" class="hero-stat hero-stat-link">
+          <span class="hero-stat-value">{{ planCount() }}</span>
+          <span class="hero-stat-label">{{ i18n.t('home.statPlan') }} <i class="bi bi-arrow-right"></i></span>
+        </a>
+      </div>
+      <app-weather-widget variant="hero" class="mt-3" />
+    </div>
+  </div>
+</section>
+
+<section class="container section" #placesSection>
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">{{ i18n.t('home.eyebrow') }}</span>
+      <h1 class="mt-1">{{ i18n.t('home.heading') }}</h1>
+      <p>
+        @if (loading()) {
+          {{ i18n.t('home.loading') }}
+        } @else {
+          {{ i18n.t('home.showing', { shown: places().length, total: allPlaces().length }) }}
+        }
+      </p>
+    </div>
+    <div class="input-icon search-box">
+      <i class="bi bi-search"></i>
+      <input type="search" class="form-control" [placeholder]="i18n.t('home.search')" [value]="search()" (input)="onSearch($event)" [attr.aria-label]="i18n.t('home.search')" />
+    </div>
+  </div>
+
+  <div class="chip-row mb-4">
+    <button type="button" class="chip" [class.active]="selectedCategory() === 'All'" (click)="selectCategory('All')">
+      <i class="bi bi-grid"></i> {{ i18n.category('All') }} <span class="count">{{ allPlaces().length }}</span>
     </button>
+    @for (cat of categories(); track cat.name) {
+      <button type="button" class="chip" [class.active]="selectedCategory() === cat.name" (click)="selectCategory(cat.name)">
+        <i class="bi" [class]="categoryIcon(cat.name)"></i> {{ i18n.category(cat.name) }} <span class="count">{{ cat.count }}</span>
+      </button>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger d-flex align-items-center justify-content-between gap-3">
+      <span><i class="bi bi-exclamation-triangle me-2"></i>{{ i18n.t('common.loadError') }}</span>
+      <button type="button" class="btn btn-sm btn-soft" (click)="loadPlaces()"><i class="bi bi-arrow-clockwise"></i> {{ i18n.t('common.retry') }}</button>
+    </div>
   }
-</div>
 
-@if (loading()) {
-  <p class="text-muted">Loading places…</p>
-}
-
-@if (errorMessage()) {
-  <div class="alert alert-danger">{{ errorMessage() }}</div>
-}
-
-<div class="row g-4">
-  @for (place of places(); track place.id) {
-    <div class="col-md-6 col-lg-4">
-      <a [routerLink]="['/places', place.id]" class="text-decoration-none text-reset">
-        <div class="card h-100 shadow-sm place-card">
-          <div class="card-img-top place-card-banner" [attr.data-category]="place.category">
-            <span>{{ place.category }}</span>
-          </div>
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{ place.name }}</h5>
-            <p class="card-text text-muted small flex-grow-1">{{ place.description | slice: 0 : 110 }}…</p>
-            <div class="d-flex justify-content-between align-items-center mt-2">
-              <span class="badge text-bg-light">{{ place.distanceFromHomeKm }} km away</span>
-              <button
-                type="button"
-                class="btn btn-sm"
-                [class.btn-success]="isInPlan(place)"
-                [class.btn-outline-secondary]="!isInPlan(place)"
-                (click)="toggleInPlan(place, $event)"
-              >
-                {{ isInPlan(place) ? '✓ In Plan' : '+ Add to Plan' }}
-              </button>
+  <div class="row g-4">
+    @if (loading()) {
+      @for (s of skeletons; track s) {
+        <div class="col-sm-6 col-lg-4">
+          <div class="place-card">
+            <div class="place-cover skeleton"></div>
+            <div class="place-body">
+              <div class="skeleton mb-3" style="height: 20px; width: 70%"></div>
+              <div class="skeleton mb-2" style="height: 12px"></div>
+              <div class="skeleton" style="height: 12px; width: 85%"></div>
             </div>
           </div>
         </div>
-      </a>
+      }
+    }
+
+    @for (place of places(); track place.id) {
+      <div class="col-sm-6 col-lg-4">
+        <article class="place-card" [attr.data-category]="place.category">
+          <div class="place-cover" [class.has-image]="!!place.imageUrl">
+            @if (place.imageUrl) {
+              <img [src]="place.imageUrl" [alt]="i18n.placeName(place)" loading="lazy" />
+            } @else {
+              <i class="bi cover-icon" [class]="categoryIcon(place.category)"></i>
+            }
+            <span class="cover-badge"><i class="bi" [class]="categoryIcon(place.category)"></i> {{ i18n.category(place.category) }}</span>
+            <span class="cover-distance"><i class="bi bi-signpost-2"></i> {{ place.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
+          </div>
+          <div class="place-body">
+            <h3 class="place-title">
+              <a [routerLink]="['/places', place.id]" class="stretched-link">{{ i18n.placeName(place) }}</a>
+            </h3>
+            <div class="place-rating">
+              @if (place.reviewCount > 0) {
+                <app-star-rating [value]="place.averageRating ?? 0" size="0.85rem" />
+                <strong>{{ place.averageRating?.toFixed(1) }}</strong>
+                <span>({{ place.reviewCount }})</span>
+              } @else {
+                <span class="no-reviews"><i class="bi bi-star"></i> {{ i18n.t('reviews.noneShort') }}</span>
+              }
+            </div>
+            <p class="place-desc">{{ i18n.placeDescription(place) }}</p>
+            <div class="place-meta">
+              <span><i class="bi bi-hourglass-split"></i> {{ i18n.duration(place.visitDuration) }}</span>
+            </div>
+          </div>
+          <div class="place-footer">
+            <span class="place-link">{{ i18n.t('card.details') }} <i class="bi bi-arrow-right"></i></span>
+            <button
+              type="button"
+              class="btn btn-sm plan-btn"
+              [class.btn-added]="isInPlan(place)"
+              [class.btn-outline-primary]="!isInPlan(place)"
+              (click)="toggleInPlan(place)"
+            >
+              @if (isInPlan(place)) {
+                <i class="bi bi-check2"></i> {{ i18n.t('card.inPlan') }}
+              } @else {
+                <i class="bi bi-plus-lg"></i> {{ i18n.t('card.add') }}
+              }
+            </button>
+          </div>
+        </article>
+      </div>
+    }
+  </div>
+
+  @if (!loading() && !errorMessage() && places().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-search"></i></div>
+      <h2>{{ i18n.t('home.emptyTitle') }}</h2>
+      <p>{{ i18n.t('home.emptyText') }}</p>
+      <button type="button" class="btn btn-primary" (click)="clearFilters()"><i class="bi bi-x-circle"></i> {{ i18n.t('home.clear') }}</button>
     </div>
   }
-</div>
-
-@if (!loading() && places().length === 0 && !errorMessage()) {
-  <p class="text-muted">No places found for this category.</p>
-}
+</section>

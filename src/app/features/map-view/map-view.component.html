@@ -1,17 +1,57 @@
-<h1 class="h3 mb-3">Map of All Places</h1>
-<p class="text-muted">🏠 marks the home reference point (Jaffna town). Click a pin to see the place name and distance.</p>
-
-@if (loading()) {
-  <p class="text-muted">Loading map…</p>
-} @else {
-  <app-leaflet-map [places]="places()" height="550px" />
-
-  <div class="list-group mt-4">
-    @for (place of places(); track place.id) {
-      <a [routerLink]="['/places', place.id]" class="list-group-item list-group-item-action d-flex justify-content-between">
-        <span>{{ place.name }} <span class="text-muted small">({{ place.category }})</span></span>
-        <span class="badge text-bg-light">{{ place.distanceFromHomeKm }} km</span>
-      </a>
-    }
+<div class="container section">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">{{ i18n.t('map.eyebrow') }}</span>
+      <h1 class="mt-1">{{ i18n.t('map.title') }}</h1>
+      <p>{{ i18n.t('map.lead') }}</p>
+    </div>
   </div>
-}
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>{{ i18n.t('common.loadError') }}</div>
+  }
+
+  <div class="map-layout">
+    <aside class="surface map-sidebar">
+      <div class="sidebar-head">
+        <div class="chip-row">
+          <button type="button" class="chip chip-sm" [class.active]="selectedCategory() === 'All'" (click)="selectedCategory.set('All')">{{ i18n.category('All') }}</button>
+          @for (cat of categories(); track cat) {
+            <button type="button" class="chip chip-sm" [class.active]="selectedCategory() === cat" (click)="selectedCategory.set(cat)">
+              <i class="bi" [class]="categoryIcon(cat)"></i> {{ i18n.category(cat) }}
+            </button>
+          }
+        </div>
+        <div class="sidebar-count">{{ i18n.t('map.count', { n: places().length }) }}</div>
+      </div>
+
+      <div class="sidebar-list">
+        @if (loading()) {
+          @for (s of [1, 2, 3, 4, 5]; track s) {
+            <div class="skeleton m-2" style="height: 56px"></div>
+          }
+        }
+        @for (place of places(); track place.id) {
+          <a [routerLink]="['/places', place.id]" class="map-item" [attr.data-category]="place.category">
+            <span class="map-item-icon">
+              @if (place.imageUrl) {
+                <img [src]="place.imageUrl" alt="" loading="lazy" />
+              } @else {
+                <i class="bi" [class]="categoryIcon(place.category)"></i>
+              }
+            </span>
+            <span class="map-item-text">
+              <span class="map-item-name">{{ i18n.placeName(place) }}</span>
+              <span class="map-item-meta">{{ i18n.category(place.category) }}</span>
+            </span>
+            <span class="map-item-dist">{{ place.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
+          </a>
+        }
+      </div>
+    </aside>
+
+    <div class="surface map-frame">
+      <app-leaflet-map [places]="places()" height="100%" />
+    </div>
+  </div>
+</div>

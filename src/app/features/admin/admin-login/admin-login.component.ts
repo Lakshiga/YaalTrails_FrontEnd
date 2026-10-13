@@ -1,13 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [FormsModule],
-  templateUrl: './admin-login.component.html'
+  imports: [FormsModule, RouterLink],
+  templateUrl: './admin-login.component.html',
+  styleUrl: './admin-login.component.css'
 })
 export class AdminLoginComponent {
   private auth = inject(AuthService);
@@ -15,6 +16,7 @@ export class AdminLoginComponent {
 
   username = '';
   password = '';
+  showPassword = signal(false);
   errorMessage = signal<string | null>(null);
   loading = signal(false);
 

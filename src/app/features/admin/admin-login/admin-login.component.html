@@ -1,25 +1,51 @@
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <h1 class="h4 mb-4">Administrator Login</h1>
+<div class="login-wrap">
+  <div class="login-card surface">
+    <div class="login-icon"><i class="bi bi-shield-lock"></i></div>
+    <h1 class="login-title">Administrator sign in</h1>
+    <p class="login-sub">Manage the places shown to visitors. Authorised staff only.</p>
 
-    <form (ngSubmit)="submit()">
+    <form (ngSubmit)="submit()" class="mt-4">
       <div class="mb-3">
         <label class="form-label" for="username">Username</label>
-        <input id="username" name="username" class="form-control" [(ngModel)]="username" required autocomplete="username" />
+        <div class="input-icon">
+          <i class="bi bi-person"></i>
+          <input id="username" name="username" class="form-control" [(ngModel)]="username" required autocomplete="username" placeholder="Enter your username" />
+        </div>
       </div>
 
-      <div class="mb-3">
+      <div class="mb-4">
         <label class="form-label" for="password">Password</label>
-        <input id="password" name="password" type="password" class="form-control" [(ngModel)]="password" required autocomplete="current-password" />
+        <div class="input-icon password-field">
+          <i class="bi bi-key"></i>
+          <input
+            id="password"
+            name="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            class="form-control"
+            [(ngModel)]="password"
+            required
+            autocomplete="current-password"
+            placeholder="Enter your password"
+          />
+          <button type="button" class="reveal-btn" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+            <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+          </button>
+        </div>
       </div>
 
       @if (errorMessage()) {
-        <div class="alert alert-danger py-2">{{ errorMessage() }}</div>
+        <div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage() }}</div>
       }
 
-      <button type="submit" class="btn btn-primary w-100" [disabled]="loading()">
-        {{ loading() ? 'Logging in…' : 'Login' }}
+      <button type="submit" class="btn btn-primary btn-lg w-100" [disabled]="loading() || !username || !password">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm"></span> Signing in…
+        } @else {
+          Sign in <i class="bi bi-arrow-right"></i>
+        }
       </button>
     </form>
+
+    <a routerLink="/" class="back-link"><i class="bi bi-arrow-left"></i> Back to the visitor site</a>
   </div>
 </div>

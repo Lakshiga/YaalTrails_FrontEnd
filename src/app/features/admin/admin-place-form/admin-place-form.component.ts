@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PlaceService } from '../../../core/services/place.service';
 import { PlaceUpsert } from '../../../core/models/place.model';
+import { ALL_CATEGORIES } from '../../../core/models/category-meta';
 
 const EMPTY_FORM: PlaceUpsert = {
   name: '',
@@ -13,26 +14,32 @@ const EMPTY_FORM: PlaceUpsert = {
   visitDuration: '',
   latitude: 9.6615,
   longitude: 80.0255,
-  imageUrl: ''
+  imageUrl: '',
+  nameTa: '',
+  descriptionTa: '',
+  openingHoursTa: '',
+  travelTipsTa: ''
 };
 
 @Component({
   selector: 'app-admin-place-form',
   standalone: true,
   imports: [FormsModule, RouterLink],
-  templateUrl: './admin-place-form.component.html'
+  templateUrl: './admin-place-form.component.html',
+  styleUrl: './admin-place-form.component.css'
 })
 export class AdminPlaceFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private placeService = inject(PlaceService);
 
-  categories = ['Religious', 'Heritage', 'Cultural', 'Nature'];
+  categories = ALL_CATEGORIES;
 
   editingId = signal<number | null>(null);
   isEditMode = () => this.editingId() !== null;
 
   form: PlaceUpsert = { ...EMPTY_FORM };
+  previewFailed = false;
 
   loading = signal(false);
   errorMessage = signal<string | null>(null);
@@ -56,7 +63,11 @@ export class AdminPlaceFormComponent implements OnInit {
           visitDuration: place.visitDuration,
           latitude: place.latitude,
           longitude: place.longitude,
-          imageUrl: place.imageUrl
+          imageUrl: place.imageUrl,
+          nameTa: place.nameTa ?? '',
+          descriptionTa: place.descriptionTa ?? '',
+          openingHoursTa: place.openingHoursTa ?? '',
+          travelTipsTa: place.travelTipsTa ?? ''
         };
         this.loading.set(false);
       },
@@ -65,6 +76,10 @@ export class AdminPlaceFormComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  previewUrl(): string {
+    return `https://www.google.com/maps/search/?api=1&query=${this.form.latitude},${this.form.longitude}`;
   }
 
   submit(): void {

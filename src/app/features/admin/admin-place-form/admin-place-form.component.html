@@ -1,64 +1,156 @@
-<a routerLink="/admin" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to dashboard</a>
+<div class="container section form-container">
+  <a routerLink="/admin" class="back-link"><i class="bi bi-arrow-left"></i> Back to dashboard</a>
 
-<h1 class="h4 mb-4">{{ isEditMode() ? 'Edit Place' : 'Add New Place' }}</h1>
-
-@if (errorMessage()) {
-  <div class="alert alert-danger">{{ errorMessage() }}</div>
-}
-
-<form (ngSubmit)="submit()" class="row g-3">
-  <div class="col-md-8">
-    <label class="form-label" for="name">Place Name</label>
-    <input id="name" name="name" class="form-control" [(ngModel)]="form.name" required />
+  <div class="page-head mt-3">
+    <div>
+      <span class="eyebrow"><i class="bi bi-shield-check"></i> Administrator</span>
+      <h1 class="mt-1">{{ isEditMode() ? 'Edit place' : 'Add a new place' }}</h1>
+      <p>{{ isEditMode() ? 'Update the details visitors see for this place.' : 'Fill in the details below to publish a new place for visitors.' }}</p>
+    </div>
   </div>
 
-  <div class="col-md-4">
-    <label class="form-label" for="category">Category</label>
-    <select id="category" name="category" class="form-select" [(ngModel)]="form.category" required>
-      @for (cat of categories; track cat) {
-        <option [value]="cat">{{ cat }}</option>
-      }
-    </select>
-  </div>
+  @if (errorMessage()) {
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage() }}</div>
+  }
 
-  <div class="col-12">
-    <label class="form-label" for="description">Description</label>
-    <textarea id="description" name="description" class="form-control" rows="3" [(ngModel)]="form.description" required></textarea>
-  </div>
+  <form #placeForm="ngForm" (ngSubmit)="submit()">
+    <div class="surface form-section">
+      <div class="section-label">
+        <span class="section-num">1</span>
+        <div>
+          <h2>Basic information</h2>
+          <p>The name, category and description shown on the place card.</p>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label" for="name">Place name</label>
+          <input id="name" name="name" class="form-control" [(ngModel)]="form.name" required placeholder="e.g. Nallur Kandaswamy Kovil" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="category">Category</label>
+          <select id="category" name="category" class="form-select" [(ngModel)]="form.category" required>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="description">Description</label>
+          <textarea id="description" name="description" class="form-control" rows="4" [(ngModel)]="form.description" required placeholder="A short introduction to the place…"></textarea>
+        </div>
+      </div>
+    </div>
 
-  <div class="col-md-6">
-    <label class="form-label" for="openingHours">Opening Hours</label>
-    <input id="openingHours" name="openingHours" class="form-control" [(ngModel)]="form.openingHours" required placeholder="e.g. 8:00 AM - 6:00 PM daily" />
-  </div>
+    <div class="surface form-section">
+      <div class="section-label">
+        <span class="section-num">2</span>
+        <div>
+          <h2>Visitor information</h2>
+          <p>Practical details that help visitors plan their day.</p>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="openingHours">Opening hours</label>
+          <div class="input-icon">
+            <i class="bi bi-clock"></i>
+            <input id="openingHours" name="openingHours" class="form-control" [(ngModel)]="form.openingHours" required placeholder="e.g. 8:00 AM - 6:00 PM daily" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="visitDuration">Estimated visit duration</label>
+          <div class="input-icon">
+            <i class="bi bi-hourglass-split"></i>
+            <input id="visitDuration" name="visitDuration" class="form-control" [(ngModel)]="form.visitDuration" required placeholder="e.g. 45 mins - 1 hour" />
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="travelTips">Travel tips</label>
+          <textarea id="travelTips" name="travelTips" class="form-control" rows="2" [(ngModel)]="form.travelTips" required placeholder="Dress code, best time to visit, things to bring…"></textarea>
+        </div>
+      </div>
+    </div>
 
-  <div class="col-md-6">
-    <label class="form-label" for="visitDuration">Estimated Visit Duration</label>
-    <input id="visitDuration" name="visitDuration" class="form-control" [(ngModel)]="form.visitDuration" required placeholder="e.g. 45 mins - 1 hour" />
-  </div>
+    <div class="surface form-section">
+      <div class="section-label">
+        <span class="section-num">3</span>
+        <div>
+          <h2>Location &amp; image</h2>
+          <p>Coordinates are used for the map pin and the distance from Jaffna town.</p>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="latitude">Latitude</label>
+          <input id="latitude" name="latitude" type="number" step="0.0001" class="form-control" [(ngModel)]="form.latitude" required />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="longitude">Longitude</label>
+          <input id="longitude" name="longitude" type="number" step="0.0001" class="form-control" [(ngModel)]="form.longitude" required />
+        </div>
+        <div class="col-12">
+          <div class="form-text mt-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Tip: right-click the place in Google Maps and copy the coordinates.
+            <a [href]="previewUrl()" target="_blank" rel="noopener">Check these coordinates on a map <i class="bi bi-box-arrow-up-right"></i></a>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="imageUrl">Image URL <span class="text-muted fw-normal">(optional)</span></label>
+          <div class="input-icon">
+            <i class="bi bi-image"></i>
+            <input id="imageUrl" name="imageUrl" class="form-control" [(ngModel)]="form.imageUrl" placeholder="https://… or /images/places/your-photo.jpg" />
+          </div>
+          @if (form.imageUrl) {
+            <div class="image-preview">
+              <img [src]="form.imageUrl" alt="Preview" (error)="previewFailed = true" (load)="previewFailed = false" [hidden]="previewFailed" />
+              @if (previewFailed) {
+                <span class="preview-error"><i class="bi bi-image-alt"></i> Image could not be loaded — check the URL.</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
 
-  <div class="col-12">
-    <label class="form-label" for="travelTips">Travel Tips</label>
-    <textarea id="travelTips" name="travelTips" class="form-control" rows="2" [(ngModel)]="form.travelTips" required></textarea>
-  </div>
+    <div class="surface form-section">
+      <div class="section-label">
+        <span class="section-num">4</span>
+        <div>
+          <h2>Tamil translation <span class="text-muted fw-normal">(optional)</span></h2>
+          <p>Shown when visitors switch the site to தமிழ். Leave blank to fall back to English.</p>
+        </div>
+      </div>
+      <div class="row g-3" lang="ta">
+        <div class="col-12">
+          <label class="form-label" for="nameTa">Place name (Tamil)</label>
+          <input id="nameTa" name="nameTa" class="form-control" [(ngModel)]="form.nameTa" placeholder="உ-ம்: நல்லூர் கந்தசுவாமி கோவில்" />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="descriptionTa">Description (Tamil)</label>
+          <textarea id="descriptionTa" name="descriptionTa" class="form-control" rows="3" [(ngModel)]="form.descriptionTa"></textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="openingHoursTa">Opening hours (Tamil)</label>
+          <input id="openingHoursTa" name="openingHoursTa" class="form-control" [(ngModel)]="form.openingHoursTa" placeholder="காலை 8:00 – மாலை 6:00 (தினமும்)" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="travelTipsTa">Travel tips (Tamil)</label>
+          <input id="travelTipsTa" name="travelTipsTa" class="form-control" [(ngModel)]="form.travelTipsTa" />
+        </div>
+      </div>
+    </div>
 
-  <div class="col-md-4">
-    <label class="form-label" for="latitude">Latitude</label>
-    <input id="latitude" name="latitude" type="number" step="0.0001" class="form-control" [(ngModel)]="form.latitude" required />
-  </div>
-
-  <div class="col-md-4">
-    <label class="form-label" for="longitude">Longitude</label>
-    <input id="longitude" name="longitude" type="number" step="0.0001" class="form-control" [(ngModel)]="form.longitude" required />
-  </div>
-
-  <div class="col-md-4">
-    <label class="form-label" for="imageUrl">Image URL (optional)</label>
-    <input id="imageUrl" name="imageUrl" class="form-control" [(ngModel)]="form.imageUrl" placeholder="https://…" />
-  </div>
-
-  <div class="col-12 mt-4">
-    <button type="submit" class="btn btn-primary" [disabled]="loading()">
-      {{ loading() ? 'Saving…' : (isEditMode() ? 'Save Changes' : 'Create Place') }}
-    </button>
-  </div>
-</form>
+    <div class="form-actions">
+      <a routerLink="/admin" class="btn btn-soft btn-lg">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg" [disabled]="loading() || placeForm.invalid">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm"></span> Saving…
+        } @else {
+          <i class="bi bi-check2"></i> {{ isEditMode() ? 'Save changes' : 'Create place' }}
+        }
+      </button>
+    </div>
+  </form>
+</div>

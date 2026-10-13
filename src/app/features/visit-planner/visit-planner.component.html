@@ -1,47 +1,194 @@
-<h1 class="h3 mb-3">My One-Day Visit Plan</h1>
-
-@if (visitPlan.plan().length === 0) {
-  <div class="alert alert-info">
-    You haven't added any places yet. Browse <a routerLink="/">places of interest</a> and click "+ Add to Plan" on the ones you'd like to visit.
+<div class="container section">
+  <div class="print-only print-head">
+    <strong>{{ appName }}</strong> — {{ i18n.t('plan.printHead') }} · {{ today() }}
   </div>
-} @else {
-  <div class="row g-4">
-    <div class="col-lg-7">
-      <ol class="list-group list-group-numbered mb-4">
-        @for (place of visitPlan.plan(); track place.id; let first = $first; let last = $last) {
-          <li class="list-group-item d-flex justify-content-between align-items-start">
-            <div class="ms-2 me-auto">
-              <a [routerLink]="['/places', place.id]" class="fw-semibold text-decoration-none">{{ place.name }}</a>
-              <div class="small text-muted">
-                {{ place.category }} &middot; {{ place.distanceFromHomeKm }} km from home &middot; ~{{ place.visitDuration }}
-              </div>
-            </div>
-            <div class="btn-group btn-group-sm" role="group">
-              <button type="button" class="btn btn-outline-secondary" [disabled]="first" (click)="visitPlan.moveUp(place.id)" title="Move earlier">↑</button>
-              <button type="button" class="btn btn-outline-secondary" [disabled]="last" (click)="visitPlan.moveDown(place.id)" title="Move later">↓</button>
-              <button type="button" class="btn btn-outline-danger" (click)="visitPlan.remove(place.id)" title="Remove from plan">✕</button>
+
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">{{ i18n.t('plan.eyebrow') }}</span>
+      <h1 class="mt-1">{{ i18n.t('plan.title') }}</h1>
+      <p>{{ i18n.t('plan.lead') }}</p>
+    </div>
+    @if (visitPlan.plan().length > 0) {
+      <div class="d-flex flex-wrap gap-2 no-print">
+        <a routerLink="/" class="btn btn-soft"><i class="bi bi-plus-lg"></i> {{ i18n.t('plan.addPlaces') }}</a>
+        <button type="button" class="btn btn-soft" (click)="share()"><i class="bi bi-share"></i> {{ i18n.t('plan.share') }}</button>
+        <button type="button" class="btn btn-soft" (click)="print()"><i class="bi bi-printer"></i> {{ i18n.t('plan.print') }}</button>
+        <button type="button" class="btn btn-outline-danger" (click)="clearPlan()"><i class="bi bi-trash3"></i> {{ i18n.t('plan.clear') }}</button>
+      </div>
+    }
+  </div>
+
+  @if (visitPlan.plan().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-calendar2-plus"></i></div>
+      <h2>{{ i18n.t('plan.emptyTitle') }}</h2>
+      <p>{{ i18n.t('plan.emptyText') }}</p>
+      <a routerLink="/" class="btn btn-primary btn-lg"><i class="bi bi-compass"></i> {{ i18n.t('plan.explore') }}</a>
+    </div>
+  } @else {
+    @let s = visitPlan.schedule();
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="stat">
+          <span class="stat-icon"><i class="bi bi-pin-map"></i></span>
+          <div>
+            <div class="stat-label">{{ i18n.t('plan.stops') }}</div>
+            <div class="stat-value">{{ s.stops.length }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat">
+          <span class="stat-icon accent"><i class="bi bi-clock-history"></i></span>
+          <div>
+            <div class="stat-label">{{ i18n.t('plan.ends') }}</div>
+            <div class="stat-value">{{ i18n.clock(s.endAt) }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat">
+          <span class="stat-icon"><i class="bi bi-hourglass-split"></i></span>
+          <div>
+            <div class="stat-label">{{ i18n.t('plan.sightseeing') }}</div>
+            <div class="stat-value">{{ i18n.minutes(visitPlan.totalVisitMinutes()) }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat">
+          <span class="stat-icon"><i class="bi bi-car-front"></i></span>
+          <div>
+            <div class="stat-label">{{ i18n.t('plan.driving', { km: s.routeKm }) }}</div>
+            <div class="stat-value">{{ i18n.minutes(s.travelMinutes) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="surface plan-controls no-print">
+          <label class="control">
+            <span class="control-label"><i class="bi bi-alarm"></i> {{ i18n.t('plan.start') }}</span>
+            <input type="time" class="form-control form-control-sm" [value]="visitPlan.startTime()" (change)="onStartTime($event)" />
+          </label>
+          <label class="control control-check">
+            <input class="form-check-input" type="checkbox" [checked]="visitPlan.returnHome()" (change)="onReturnHome($event)" />
+            <span>{{ i18n.t('plan.return') }}</span>
+          </label>
+          <button
+            type="button"
+            class="btn btn-sm btn-accent ms-md-auto"
+            (click)="optimise()"
+            [disabled]="s.stops.length < 2 || optimising()"
+            [title]="i18n.t('plan.optimiseHint')"
+          >
+            @if (optimising()) {
+              <span class="spinner-border spinner-border-sm"></span>
+            } @else {
+              <i class="bi bi-magic"></i>
+            }
+            {{ i18n.t('plan.optimise') }}
+          </button>
+        </div>
+
+        <ol class="timeline">
+          <li class="timeline-start">
+            <span class="timeline-dot home"><i class="bi bi-house-door-fill"></i></span>
+            <div class="timeline-start-text">
+              <span class="time-chip">{{ i18n.clock(s.startAt) }}</span>
+              {{ i18n.t('plan.leave', { place: i18n.t('map.home') }) }}
             </div>
           </li>
-        }
-      </ol>
+          @for (stop of s.stops; track stop.place.id; let i = $index, first = $first, last = $last) {
+            <li class="timeline-leg" [class.is-road]="s.usesRoadData">
+              <i class="bi bi-car-front"></i> {{ i18n.t('plan.leg', { min: stop.travelMinutes, km: stop.travelKm }) }}
+            </li>
+            <li class="timeline-item" [attr.data-category]="stop.place.category">
+              <span class="timeline-dot">{{ i + 1 }}</span>
+              <div class="stop-card">
+                <div class="stop-thumb">
+                  @if (stop.place.imageUrl) {
+                    <img [src]="stop.place.imageUrl" [alt]="i18n.placeName(stop.place)" loading="lazy" />
+                  } @else {
+                    <i class="bi" [class]="categoryIcon(stop.place.category)"></i>
+                  }
+                </div>
+                <div class="stop-main">
+                  <div class="stop-time">{{ i18n.clock(stop.arriveAt) }} – {{ i18n.clock(stop.leaveAt) }}</div>
+                  <a [routerLink]="['/places', stop.place.id]" class="stop-name">{{ i18n.placeName(stop.place) }}</a>
+                  <div class="stop-meta">
+                    <span class="cat-badge"><i class="bi" [class]="categoryIcon(stop.place.category)"></i> {{ i18n.category(stop.place.category) }}</span>
+                    <span><i class="bi bi-hourglass-split"></i> {{ i18n.duration(stop.place.visitDuration) }}</span>
+                  </div>
+                  <div class="stop-hours"><i class="bi bi-clock"></i> {{ i18n.placeHours(stop.place) }}</div>
+                </div>
+                <div class="stop-actions no-print">
+                  <button type="button" class="btn btn-soft btn-icon" [disabled]="first" (click)="visitPlan.moveUp(stop.place.id)" [title]="i18n.t('plan.moveUp')" [attr.aria-label]="i18n.t('plan.moveUp')">
+                    <i class="bi bi-chevron-up"></i>
+                  </button>
+                  <button type="button" class="btn btn-soft btn-icon" [disabled]="last" (click)="visitPlan.moveDown(stop.place.id)" [title]="i18n.t('plan.moveDown')" [attr.aria-label]="i18n.t('plan.moveDown')">
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-danger btn-icon" (click)="remove(stop.place)" [title]="i18n.t('plan.remove')" [attr.aria-label]="i18n.t('plan.remove')">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </li>
+          }
+          @if (s.returnLeg; as back) {
+            <li class="timeline-leg" [class.is-road]="s.usesRoadData">
+              <i class="bi bi-car-front"></i> {{ i18n.t('plan.leg', { min: back.travelMinutes, km: back.travelKm }) }}
+            </li>
+            <li class="timeline-start timeline-end">
+              <span class="timeline-dot home"><i class="bi bi-flag-fill"></i></span>
+              <div class="timeline-start-text">
+                <span class="time-chip">{{ i18n.clock(back.arriveAt) }}</span>
+                {{ i18n.t('plan.back', { place: i18n.t('map.home') }) }}
+              </div>
+            </li>
+          }
+        </ol>
 
-      <div class="card bg-light">
-        <div class="card-body">
-          <h2 class="h6">Plan Summary</h2>
-          <p class="mb-1">Places to visit: <strong>{{ visitPlan.plan().length }}</strong></p>
-          <p class="mb-1">Estimated total visit time: <strong>{{ formatMinutes(visitPlan.totalVisitMinutes()) }}</strong></p>
-          <p class="mb-0">Combined distance from home: <strong>{{ visitPlan.totalDistanceKm() }} km</strong></p>
-          <p class="small text-muted mt-2 mb-0">
-            Tip: use the ↑ / ↓ buttons to arrange places in a sensible visiting order for your day.
-          </p>
+        <div class="plan-tip">
+          <i class="bi bi-info-circle"></i>
+          <span>{{ i18n.t(s.usesRoadData ? 'plan.noteRoad' : 'plan.noteEstimate') }}</span>
         </div>
       </div>
 
-      <button type="button" class="btn btn-outline-danger btn-sm mt-3" (click)="visitPlan.clear()">Clear entire plan</button>
+      <div class="col-lg-5">
+        <div class="side-stack">
+          <div class="surface map-card">
+            <div class="map-card-head">
+              <span><i class="bi bi-map"></i> {{ i18n.t('plan.routeTitle') }}</span>
+              @switch (visitPlan.routeStatus()) {
+                @case ('road') {
+                  <span class="route-badge road"><i class="bi bi-sign-turn-right"></i> {{ i18n.t('plan.routeRoad') }}</span>
+                }
+                @case ('loading') {
+                  <span class="route-badge"><span class="spinner-border spinner-border-sm"></span> {{ i18n.t('plan.routeLoading') }}</span>
+                }
+                @default {
+                  <span class="route-badge">{{ i18n.t('plan.routeApprox') }}</span>
+                }
+              }
+            </div>
+            <app-leaflet-map
+              [places]="visitPlan.plan()"
+              [numbered]="true"
+              [showRoute]="true"
+              [routeReturnsHome]="visitPlan.returnHome()"
+              [routeGeometry]="visitPlan.roadRoute()?.geometry ?? null"
+              height="440px"
+            />
+          </div>
+          <app-weather-widget variant="day" class="no-print" [fromMinutes]="s.startAt" [toMinutes]="s.endAt" />
+        </div>
+      </div>
     </div>
-
-    <div class="col-lg-5">
-      <app-leaflet-map [places]="visitPlan.plan()" height="450px" />
-    </div>
-  </div>
-}
+  }
+</div>

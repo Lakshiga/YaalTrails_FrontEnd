@@ -20,6 +20,10 @@ export const routes: Routes = [
       import('./features/visit-planner/visit-planner.component').then((m) => m.VisitPlannerComponent)
   },
   {
+    path: 'credits',
+    loadComponent: () => import('./features/credits/credits.component').then((m) => m.CreditsComponent)
+  },
+  {
     path: 'admin/login',
     loadComponent: () =>
       import('./features/admin/admin-login/admin-login.component').then((m) => m.AdminLoginComponent)

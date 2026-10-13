@@ -1,48 +1,261 @@
 @if (loading()) {
-  <p class="text-muted">Loading place details…</p>
+  <div class="container section">
+    <div class="skeleton mb-3" style="height: 16px; width: 200px"></div>
+    <div class="skeleton mb-4" style="height: 40px; width: 55%"></div>
+    <div class="skeleton" style="height: 260px"></div>
+  </div>
 }
 
 @if (notFound()) {
-  <div class="alert alert-warning">Place not found.</div>
-  <a routerLink="/" class="btn btn-outline-primary">Back to all places</a>
+  <div class="container section">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-geo"></i></div>
+      <h2>{{ i18n.t('detail.notFound') }}</h2>
+      <p>{{ i18n.t('detail.notFoundText') }}</p>
+      <a routerLink="/" class="btn btn-primary"><i class="bi bi-arrow-left"></i> {{ i18n.t('detail.back') }}</a>
+    </div>
+  </div>
 }
 
 @if (place(); as p) {
-  <a routerLink="/" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to all places</a>
+  <section class="detail-hero" [attr.data-category]="p.category" [class.has-image]="!!p.imageUrl">
+    @if (p.imageUrl) {
+      <img class="detail-hero-img" [src]="p.imageUrl" [alt]="i18n.placeName(p)" />
+    }
+    <div class="container detail-hero-inner">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a routerLink="/">{{ i18n.t('nav.explore') }}</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>{{ i18n.category(p.category) }}</span>
+        <i class="bi bi-chevron-right"></i>
+        <span class="current">{{ i18n.placeName(p) }}</span>
+      </nav>
+      <span class="detail-badge"><i class="bi" [class]="categoryIcon(p.category)"></i> {{ i18n.category(p.category) }}</span>
+      <h1 class="detail-title">{{ i18n.placeName(p) }}</h1>
+      <div class="detail-quick">
+        @if (p.reviewCount > 0) {
+          <span class="hero-rating">
+            <app-star-rating [value]="p.averageRating ?? 0" size="0.95rem" />
+            {{ p.averageRating?.toFixed(1) }} · {{ reviewCountLabel(p.reviewCount) }}
+          </span>
+        }
+        <span><i class="bi bi-signpost-2"></i> {{ i18n.t('detail.fromTown', { km: p.distanceFromHomeKm }) }}</span>
+        <span><i class="bi bi-hourglass-split"></i> {{ i18n.duration(p.visitDuration) }}</span>
+      </div>
+    </div>
+    @if (credit(); as c) {
+      <div class="hero-credit">
+        <i class="bi bi-camera"></i> {{ c.author }} ·
+        <a [href]="c.source" target="_blank" rel="noopener">{{ c.license }}</a>
+      </div>
+    }
+    @if (!p.imageUrl) {
+      <i class="bi detail-hero-icon" [class]="categoryIcon(p.category)" aria-hidden="true"></i>
+    }
+  </section>
 
-  <div class="row g-4">
-    <div class="col-lg-7">
-      <span class="badge text-bg-secondary mb-2">{{ p.category }}</span>
-      <h1 class="h3">{{ p.name }}</h1>
-      <p>{{ p.description }}</p>
+  <div class="container section" [attr.data-category]="p.category">
+    <div class="row g-4 g-xl-5">
+      <div class="col-lg-7 col-xl-8">
+        <div class="surface content-card">
+          <h2 class="content-heading">{{ i18n.t('detail.about') }}</h2>
+          <p class="detail-description">{{ i18n.placeDescription(p) }}</p>
+        </div>
 
-      <dl class="row mt-4">
-        <dt class="col-sm-4">Opening Hours</dt>
-        <dd class="col-sm-8">{{ p.openingHours }}</dd>
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <div class="info-tile">
+              <span class="info-icon"><i class="bi bi-clock"></i></span>
+              <span class="info-label">{{ i18n.t('detail.hours') }}</span>
+              <span class="info-value">{{ i18n.placeHours(p) }}</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="info-tile">
+              <span class="info-icon"><i class="bi bi-hourglass-split"></i></span>
+              <span class="info-label">{{ i18n.t('detail.visit') }}</span>
+              <span class="info-value">{{ i18n.duration(p.visitDuration) }}</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="info-tile">
+              <span class="info-icon"><i class="bi bi-signpost-2"></i></span>
+              <span class="info-label">{{ i18n.t('detail.distance') }}</span>
+              <span class="info-value">{{ p.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
+            </div>
+          </div>
+        </div>
 
-        <dt class="col-sm-4">Distance from Home</dt>
-        <dd class="col-sm-8">{{ p.distanceFromHomeKm }} km</dd>
+        <div class="tips-card mt-4">
+          <span class="tips-icon"><i class="bi bi-lightbulb"></i></span>
+          <div>
+            <h2 class="content-heading mb-1">{{ i18n.t('detail.tips') }}</h2>
+            <p class="mb-0">{{ i18n.placeTips(p) }}</p>
+          </div>
+        </div>
 
-        <dt class="col-sm-4">Estimated Visit Duration</dt>
-        <dd class="col-sm-8">{{ p.visitDuration }}</dd>
+        <!-- Reviews -->
+        <section class="reviews" id="reviews">
+          <span class="eyebrow">{{ i18n.t('reviews.eyebrow') }}</span>
+          <h2 class="reviews-title">{{ i18n.t('reviews.title') }}</h2>
 
-        <dt class="col-sm-4">Travel Tips</dt>
-        <dd class="col-sm-8">{{ p.travelTips }}</dd>
-      </dl>
+          <div class="surface reviews-card">
+            <div class="reviews-summary">
+              <div class="summary-score">
+                <div class="score-big">{{ p.reviewCount > 0 ? p.averageRating?.toFixed(1) : '–' }}</div>
+                <app-star-rating [value]="p.averageRating ?? 0" size="1.05rem" />
+                <div class="score-count">
+                  {{ p.reviewCount > 0 ? reviewCountLabel(p.reviewCount) : i18n.t('reviews.noneShort') }}
+                </div>
+              </div>
+              <div class="summary-bars">
+                @for (row of distribution(); track row.stars) {
+                  <div class="bar-row">
+                    <span class="bar-label">{{ row.stars }} <i class="bi bi-star-fill"></i></span>
+                    <span class="bar-track"><span class="bar-fill" [style.width.%]="row.percent"></span></span>
+                    <span class="bar-count">{{ row.count }}</span>
+                  </div>
+                }
+              </div>
+            </div>
 
-      <button
-        type="button"
-        class="btn"
-        [class.btn-success]="isInPlan()"
-        [class.btn-primary]="!isInPlan()"
-        (click)="toggleInPlan()"
-      >
-        {{ isInPlan() ? '✓ Added to your Day Plan' : '+ Add to your Day Plan' }}
-      </button>
+            <form class="review-form" (ngSubmit)="submitReview()" #reviewForm="ngForm">
+              <h3 class="form-heading">{{ i18n.t('reviews.write') }}</h3>
+              <div class="mb-3">
+                <label class="form-label d-block">{{ i18n.t('reviews.yourRating') }}</label>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <app-star-rating [editable]="true" [value]="draft.rating" (valueChange)="draft.rating = $event" [label]="i18n.t('reviews.yourRating')" />
+                  @if (draft.rating > 0) {
+                    <span class="rating-word">{{ i18n.t('reviews.star' + draft.rating) }}</span>
+                  }
+                </div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-5">
+                  <label class="form-label" for="reviewName">{{ i18n.t('reviews.name') }}</label>
+                  <input id="reviewName" name="visitorName" class="form-control" [(ngModel)]="draft.visitorName" required minlength="2" maxlength="60" [placeholder]="i18n.t('reviews.namePh')" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="reviewComment">{{ i18n.t('reviews.comment') }}</label>
+                  <textarea id="reviewComment" name="comment" class="form-control" rows="3" maxlength="1000" [(ngModel)]="draft.comment" [placeholder]="i18n.t('reviews.commentPh')"></textarea>
+                </div>
+              </div>
+              @if (reviewError()) {
+                <div class="alert alert-danger py-2 small mt-3 mb-0"><i class="bi bi-exclamation-circle me-2"></i>{{ reviewError() }}</div>
+              }
+              <div class="d-flex align-items-center justify-content-between gap-3 mt-3 flex-wrap">
+                <span class="form-text m-0"><i class="bi bi-globe2 me-1"></i>{{ i18n.t('reviews.public') }}</span>
+                <button type="submit" class="btn btn-primary" [disabled]="posting() || reviewForm.invalid">
+                  @if (posting()) {
+                    <span class="spinner-border spinner-border-sm"></span> {{ i18n.t('reviews.posting') }}
+                  } @else {
+                    <i class="bi bi-send"></i> {{ i18n.t('reviews.submit') }}
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+
+          @if (reviews().length === 0) {
+            <p class="reviews-empty"><i class="bi bi-chat-square-heart"></i> {{ i18n.t('reviews.none') }}</p>
+          } @else {
+            <ul class="review-list">
+              @for (r of visibleReviews(); track r.id) {
+                <li class="review-item surface">
+                  <div class="review-head">
+                    <span class="review-avatar">{{ initials(r.visitorName) }}</span>
+                    <div class="review-who">
+                      <strong>{{ r.visitorName }}</strong>
+                      <span>{{ i18n.date(r.createdAtUtc) }}</span>
+                    </div>
+                    <app-star-rating [value]="r.rating" size="0.9rem" />
+                  </div>
+                  @if (r.comment) {
+                    <p class="review-text">{{ r.comment }}</p>
+                  }
+                </li>
+              }
+            </ul>
+            @if (reviews().length > visibleReviews().length) {
+              <button type="button" class="btn btn-soft btn-sm mt-2" (click)="showAllReviews.set(true)">
+                {{ i18n.t('reviews.showAll', { n: reviews().length }) }}
+              </button>
+            }
+          }
+        </section>
+      </div>
+
+      <div class="col-lg-5 col-xl-4">
+        <aside class="surface side-card">
+          <app-leaflet-map [places]="[p]" height="260px" />
+          <div class="side-body">
+            <div class="side-row">
+              <span><i class="bi bi-geo-alt"></i> {{ i18n.t('detail.coords') }}</span>
+              <strong>{{ p.latitude.toFixed(4) }}, {{ p.longitude.toFixed(4) }}</strong>
+            </div>
+            <div class="side-row">
+              <span><i class="bi bi-signpost-2"></i> {{ i18n.t('detail.fromTownShort') }}</span>
+              <strong>{{ p.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</strong>
+            </div>
+
+            <button type="button" class="btn btn-lg w-100 mt-3" [class.btn-added]="isInPlan()" [class.btn-primary]="!isInPlan()" (click)="toggleInPlan()">
+              @if (isInPlan()) {
+                <i class="bi bi-check2-circle"></i> {{ i18n.t('detail.added') }}
+              } @else {
+                <i class="bi bi-plus-circle"></i> {{ i18n.t('detail.add') }}
+              }
+            </button>
+            @if (isInPlan()) {
+              <a routerLink="/planner" class="btn btn-soft w-100 mt-2"><i class="bi bi-calendar2-check"></i> {{ i18n.t('detail.viewPlan') }}</a>
+            }
+            <a [href]="directionsUrl(p)" target="_blank" rel="noopener" class="btn btn-soft w-100 mt-2">
+              <i class="bi bi-sign-turn-right"></i> {{ i18n.t('detail.directions') }}
+            </a>
+          </div>
+        </aside>
+      </div>
     </div>
 
-    <div class="col-lg-5">
-      <app-leaflet-map [places]="[p]" height="350px" />
-    </div>
+    @if (nearby().length > 0) {
+      <section class="nearby">
+        <div class="nearby-head">
+          <div>
+            <span class="eyebrow">{{ i18n.t('detail.combine') }}</span>
+            <h2 class="nearby-title">{{ i18n.t('detail.nearby') }}</h2>
+          </div>
+          <a routerLink="/" class="btn btn-soft btn-sm">{{ i18n.t('detail.seeAll') }} <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-3">
+          @for (n of nearby(); track n.place.id) {
+            <div class="col-md-4">
+              <article class="nearby-card" [attr.data-category]="n.place.category">
+                <div class="nearby-img">
+                  @if (n.place.imageUrl) {
+                    <img [src]="n.place.imageUrl" [alt]="i18n.placeName(n.place)" loading="lazy" />
+                  } @else {
+                    <i class="bi" [class]="categoryIcon(n.place.category)"></i>
+                  }
+                </div>
+                <div class="nearby-body">
+                  <a [routerLink]="['/places', n.place.id]" class="nearby-name stretched-link">{{ i18n.placeName(n.place) }}</a>
+                  <div class="nearby-meta"><i class="bi bi-car-front"></i> {{ i18n.t('detail.drive', { km: n.km, min: n.minutes }) }}</div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-icon nearby-add"
+                  [class.btn-added]="isNearbyInPlan(n.place)"
+                  [class.btn-soft]="!isNearbyInPlan(n.place)"
+                  (click)="toggleInPlan(n.place)"
+                  [attr.aria-label]="isNearbyInPlan(n.place) ? i18n.t('card.inPlan') : i18n.t('card.add')"
+                  [title]="isNearbyInPlan(n.place) ? i18n.t('card.inPlan') : i18n.t('card.add')"
+                >
+                  <i class="bi" [class.bi-check2]="isNearbyInPlan(n.place)" [class.bi-plus-lg]="!isNearbyInPlan(n.place)"></i>
+                </button>
+              </article>
+            </div>
+          }
+        </div>
+      </section>
+    }
   </div>
 }

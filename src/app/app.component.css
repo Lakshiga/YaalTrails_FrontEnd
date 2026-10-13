@@ -1,4 +1,165 @@
-.nav-link.active {
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background: rgba(250, 248, 244, 0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.navbar { padding: 0.7rem 0; }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--ink);
+}
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--brand), #187a6f);
+  color: #fff;
+  font-size: 1.2rem;
+  box-shadow: 0 6px 14px -4px rgba(14, 77, 74, 0.45);
+}
+.brand-logo { width: 40px; height: 40px; flex: none; filter: drop-shadow(0 4px 8px rgba(14, 77, 74, 0.25)); }
+.brand-logo-tile {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1.05; }
+.brand-name { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; }
+.brand-sub { font-size: 0.72rem; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
+.brand-light { color: #fff; }
+.brand-light .brand-sub { color: rgba(255, 255, 255, 0.6); }
+.brand-light .brand-mark { background: rgba(255, 255, 255, 0.12); box-shadow: none; }
+
+.nav-toggle {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  color: var(--ink-2);
   font-weight: 600;
-  text-decoration: underline;
+  font-size: 0.925rem;
+  transition: all 0.15s ease;
+}
+.nav-links a .bi { font-size: 1rem; opacity: 0.8; }
+.nav-links a:hover { background: var(--line-2); color: var(--ink); }
+.nav-links a.active { background: var(--brand-50); color: var(--brand); }
+.nav-links a.active .bi { opacity: 1; }
+
+.nav-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: inline-grid;
+  place-items: center;
+}
+.nav-divider { width: 1px; height: 22px; background: var(--line); margin: 0 0.4rem; }
+.nav-links a.nav-admin { border: 1px solid var(--line); background: var(--surface); }
+.nav-links a.nav-admin:hover,
+.nav-links a.nav-admin.active { border-color: var(--brand-100); background: var(--brand-50); color: var(--brand); }
+
+@media (max-width: 991.98px) {
+  .navbar-collapse { margin-top: 0.75rem; }
+  .nav-links { flex-direction: column; align-items: stretch; padding-bottom: 0.5rem; }
+  .nav-links a { width: 100%; border-radius: 12px; padding: 0.75rem 1rem; }
+}
+
+/* ---------- Main ---------- */
+.site-main { flex: 1 0 auto; }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  background: var(--brand-700);
+  color: rgba(255, 255, 255, 0.72);
+  padding: 3.5rem 0 1.5rem;
+  margin-top: 2rem;
+}
+.site-footer h6 {
+  color: #fff;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.footer-copy { max-width: 400px; font-size: 0.925rem; line-height: 1.7; }
+.footer-links { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; font-size: 0.925rem; }
+.footer-links a { color: rgba(255, 255, 255, 0.72); }
+.footer-links a:hover { color: #fff; }
+.footer-bottom {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Language switch ---------- */
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--line-2);
+  border: 1px solid var(--line);
+}
+.lang-switch button {
+  border: 0;
+  background: transparent;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1.2;
+}
+.lang-switch button.active { background: var(--surface); color: var(--brand); box-shadow: var(--shadow-sm); }
+
+/* Keep logo, language switch and menu button on one row on small phones. */
+@media (max-width: 479.98px) {
+  .brand-sub { display: none; }
 }
