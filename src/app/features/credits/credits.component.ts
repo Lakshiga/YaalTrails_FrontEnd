@@ -1,7 +1,6 @@
-import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PlaceService } from '../../core/services/place.service';
-import { Place } from '../../core/models/place.model';
+import { PlaceStore } from '../../core/services/place-store.service';
 import { PHOTO_CREDITS } from '../../core/models/photo-credits';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -54,13 +53,13 @@ import { I18nService } from '../../core/i18n/i18n.service';
   ]
 })
 export class CreditsComponent implements OnInit {
-  private placeService = inject(PlaceService);
-  private places = signal<Place[]>([]);
+  private store = inject(PlaceStore);
+  private places = this.store.places;
   readonly i18n = inject(I18nService);
 
   rows = computed(() => PHOTO_CREDITS.map((c) => ({ ...c, place: this.places().find((p) => p.imageUrl === c.image) })));
 
   ngOnInit(): void {
-    this.placeService.getAll().subscribe({ next: (places) => this.places.set(places) });
+    this.store.load();
   }
 }

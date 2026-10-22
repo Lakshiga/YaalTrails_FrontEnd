@@ -2,27 +2,95 @@
   <div class="page-head">
     <div>
       <span class="eyebrow">{{ i18n.t('map.eyebrow') }}</span>
-      <h1 class="mt-1">{{ i18n.t('map.title') }}</h1>
+      <h1 class="mt-1">{{ districts.isHomeArea() ? i18n.t('map.title') : i18n.t('map.titleArea', { area: districts.areaName() }) }}</h1>
       <p>{{ i18n.t('map.lead') }}</p>
     </div>
   </div>
 
   @if (errorMessage()) {
-    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>{{ i18n.t('common.loadError') }}</div>
+    <div class="alert alert-danger d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <span><i class="bi bi-exclamation-triangle me-2"></i>{{ i18n.t('common.loadError') }}</span>
+      <button type="button" class="btn btn-soft btn-sm" (click)="load()"><i class="bi bi-arrow-clockwise"></i> {{ i18n.t('common.retry') }}</button>
+    </div>
   }
 
   <div class="map-layout">
     <aside class="surface map-sidebar">
       <div class="sidebar-head">
+        <app-area-select class="mb-3" />
         <div class="chip-row">
-          <button type="button" class="chip chip-sm" [class.active]="selectedCategory() === 'All'" (click)="selectedCategory.set('All')">{{ i18n.category('All') }}</button>
+          <button type="button" class="chip chip-sm" [class.active]="selectedCategory() === 'All'" [attr.aria-pressed]="selectedCategory() === 'All'" (click)="selectedCategory.set('All')">{{ i18n.category('All') }}</button>
           @for (cat of categories(); track cat) {
-            <button type="button" class="chip chip-sm" [class.active]="selectedCategory() === cat" (click)="selectedCategory.set(cat)">
+            <button type="button" class="chip chip-sm" [class.active]="selectedCategory() === cat" [attr.aria-pressed]="selectedCategory() === cat" (click)="selectedCategory.set(cat)">
               <i class="bi" [class]="categoryIcon(cat)"></i> {{ i18n.category(cat) }}
             </button>
           }
         </div>
-        <div class="sidebar-count">{{ i18n.t('map.count', { n: places().length }) }}</div>
+
+        <div class="locate-box">
+          @if (location.status() === 'ready') {
+            <button type="button" class="btn btn-soft btn-sm" (click)="location.clear()">
+              <i class="bi bi-x-circle"></i> {{ i18n.t('map.locClear') }}
+            </button>
+          } @else {
+            <button type="button" class="btn btn-primary btn-sm" (click)="location.locate()" [disabled]="location.status() === 'locating'">
+              @if (location.status() === 'locating') {
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> {{ i18n.t('map.locating') }}
+              } @else {
+                <i class="bi bi-crosshair"></i> {{ i18n.t('map.locate') }}
+              }
+            </button>
+          }
+          <div class="locate-msg" role="status" aria-live="polite">
+            @switch (location.status()) {
+              @case ('ready') {
+                @if (location.insideSriLanka()) {
+                  <span class="ok"><i class="bi bi-person-check"></i> {{ i18n.t('map.locatedInside') }}</span>
+                  @if (nearest(); as near) {
+                    @if (near.code !== districts.area() && !(districts.isHomeArea() && near.code === 'LK-41')) {
+                      <button type="button" class="btn btn-link btn-sm p-0 d-block" (click)="showNearest()">
+                        <i class="bi bi-geo"></i> {{ i18n.t('map.showNearest', { area: i18n.districtName(near) }) }}
+                      </button>
+                    }
+                  }
+                } @else {
+                  <span class="warn"><i class="bi bi-exclamation-triangle"></i> {{ i18n.t('map.locatedOutside') }}</span>
+                }
+              }
+              @case ('denied') {
+                <span class="warn"><i class="bi bi-slash-circle"></i> {{ i18n.t('map.locDenied') }}</span>
+              }
+              @case ('unavailable') {
+                <span class="warn"><i class="bi bi-exclamation-triangle"></i> {{ i18n.t('map.locUnavailable') }}</span>
+              }
+              @case ('unsupported') {
+                <span class="warn"><i class="bi bi-exclamation-triangle"></i> {{ i18n.t('map.locUnsupported') }}</span>
+              }
+              @case ('idle') {
+                <span>{{ i18n.t('map.locPrivacy') }}</span>
+              }
+            }
+          </div>
+        </div>
+
+        <div class="sidebar-count">
+          {{ i18n.t(location.origin() ? 'map.countNearYou' : 'map.count', { n: places().length }) }}
+          <span class="sidebar-note">{{ i18n.t('map.straightLine') }}</span>
+        </div>
+        <label class="osm-toggle">
+          <input class="form-check-input" type="checkbox" [checked]="showExternal()" (change)="showExternal.set($any($event.target).checked)" />
+          <span>
+            {{ i18n.t(districts.external().source === 'google' ? 'map.showGoogle' : 'map.showExternal') }}
+            @switch (districts.external().status) {
+              @case ('loading') { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> }
+              @case ('ready') { <span class="osm-count">({{ externalCount() }})</span> }
+              @case ('error') {
+                <span class="osm-count warn">{{ i18n.t('map.osmError') }}</span>
+                <button type="button" class="btn btn-link btn-sm p-0" (click)="districts.loadExternal(true)">{{ i18n.t('common.retry') }}</button>
+              }
+            }
+          </span>
+        </label>
       </div>
 
       <div class="sidebar-list">
@@ -30,28 +98,60 @@
           @for (s of [1, 2, 3, 4, 5]; track s) {
             <div class="skeleton m-2" style="height: 56px"></div>
           }
+        } @else if (!errorMessage() && rows().length === 0) {
+          <p class="map-empty"><i class="bi bi-geo"></i> {{ i18n.t('map.empty') }}</p>
         }
-        @for (place of places(); track place.id) {
-          <a [routerLink]="['/places', place.id]" class="map-item" [attr.data-category]="place.category">
-            <span class="map-item-icon">
-              @if (place.imageUrl) {
-                <img [src]="place.imageUrl" alt="" loading="lazy" />
-              } @else {
-                <i class="bi" [class]="categoryIcon(place.category)"></i>
+        @for (row of rows(); track row.card.key) {
+          @if (link(row.card); as commands) {
+            <a [routerLink]="commands" class="map-item" [attr.data-category]="row.card.place.category">
+              <ng-container [ngTemplateOutlet]="rowContent" [ngTemplateOutletContext]="{ $implicit: row }" />
+            </a>
+          } @else {
+            <a [href]="row.card.kind === 'external' ? row.card.place.url : null" target="_blank" rel="noopener" class="map-item" [attr.data-category]="row.card.place.category">
+              <ng-container [ngTemplateOutlet]="rowContent" [ngTemplateOutletContext]="{ $implicit: row }" />
+            </a>
+          }
+        }
+        <ng-template #rowContent let-row>
+          <span class="map-item-icon" [class.photo-pending]="photoPending(row.card)">
+            @if (row.card.photoUrl) {
+              <img appFadeImage [src]="row.card.photoUrl" alt="" loading="lazy" />
+            } @else if (!photoPending(row.card)) {
+              <i class="bi" [class]="categoryIcon(row.card.place.category)"></i>
+            }
+          </span>
+          <span class="map-item-text">
+            <span class="map-item-name">{{ name(row.card) }}</span>
+            <span class="map-item-meta">
+              {{ i18n.category(row.card.place.category) }}
+              @if (rating(row.card); as stars) {
+                · <i class="bi bi-star-fill text-warning"></i> {{ stars.toFixed(1) }}
+              }
+              @if (row.card.kind === 'external') {
+                <span class="map-item-source">{{ i18n.t(row.card.place.source === 'google' ? 'ext.sourceGoogle' : 'ext.sourceOsm') }}</span>
               }
             </span>
-            <span class="map-item-text">
-              <span class="map-item-name">{{ i18n.placeName(place) }}</span>
-              <span class="map-item-meta">{{ i18n.category(place.category) }}</span>
-            </span>
-            <span class="map-item-dist">{{ place.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
-          </a>
+          </span>
+          <span class="map-item-dist">{{ row.km }} {{ i18n.t('unit.km') }}</span>
+        </ng-template>
+        @if (selection().invalidCount > 0) {
+          <p class="map-hidden-note"><i class="bi bi-info-circle"></i> {{ i18n.t('map.hiddenInvalid', { n: selection().invalidCount }) }}</p>
+        }
+        @if (selection().outsideCount > 0) {
+          <p class="map-hidden-note"><i class="bi bi-info-circle"></i> {{ i18n.t('map.hiddenOutside', { n: selection().outsideCount, radius: radiusKm }) }}</p>
         }
       </div>
     </aside>
 
     <div class="surface map-frame">
-      <app-leaflet-map [places]="places()" height="100%" />
+      <app-map
+        [places]="places()"
+        [userLocation]="location.origin()"
+        [showHome]="districts.isHomeArea()"
+        [showServiceArea]="districts.isHomeArea()"
+        [center]="districts.center()"
+        height="100%"
+      />
     </div>
   </div>
 </div>

@@ -1,66 +1,62 @@
+@if (!adminArea()) {
 <header class="site-header">
   <nav class="navbar navbar-expand-lg">
     <div class="container">
-      <a class="brand" routerLink="/" (click)="navOpen = false">
+      <a class="brand" routerLink="/">
         <img class="brand-logo" src="logo.svg" alt="" width="40" height="40" />
         <span class="brand-text">
           <span class="brand-name">{{ appName }}</span>
-          <span class="brand-sub">{{ i18n.t('brand.tagline') }}</span>
+          <span class="brand-sub">{{ tagline() }}</span>
         </span>
       </a>
 
-      <div class="d-flex align-items-center gap-2 d-lg-none">
+      <div class="d-lg-none">
         <ng-container *ngTemplateOutlet="langSwitch" />
-        <button class="nav-toggle" type="button" (click)="navOpen = !navOpen" [attr.aria-expanded]="navOpen" [attr.aria-label]="i18n.t('nav.toggle')">
-          <i class="bi" [class.bi-list]="!navOpen" [class.bi-x-lg]="navOpen"></i>
-        </button>
       </div>
 
-      <div class="collapse navbar-collapse" [class.show]="navOpen">
+      <div class="d-none d-lg-flex flex-grow-1">
         <ul class="nav-links ms-auto">
           <li>
-            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="navOpen = false">
+            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
               <i class="bi bi-grid"></i> {{ i18n.t('nav.explore') }}
             </a>
           </li>
           <li>
-            <a routerLink="/map" routerLinkActive="active" (click)="navOpen = false">
+            <a routerLink="/map" routerLinkActive="active">
               <i class="bi bi-map"></i> {{ i18n.t('nav.map') }}
             </a>
           </li>
           <li>
-            <a routerLink="/planner" routerLinkActive="active" (click)="navOpen = false">
+            <a routerLink="/planner" routerLinkActive="active">
               <i class="bi bi-calendar2-check"></i> {{ i18n.t('nav.plan') }}
               @if (planCount() > 0) {
                 <span class="nav-count">{{ planCount() }}</span>
               }
             </a>
           </li>
-          <li class="nav-divider d-none d-lg-block"></li>
-          <li class="d-none d-lg-block">
+          <li class="nav-divider"></li>
+          <li>
             <ng-container *ngTemplateOutlet="langSwitch" />
           </li>
-          <li>
-            @if (isAdmin()) {
-              <a routerLink="/admin" routerLinkActive="active" class="nav-admin" (click)="navOpen = false">
+          @if (isAdmin()) {
+            <li>
+              <a routerLink="/admin" routerLinkActive="active" class="nav-admin">
                 <i class="bi bi-speedometer2"></i> {{ i18n.t('nav.dashboard') }}
               </a>
-            } @else {
-              <a routerLink="/admin/login" routerLinkActive="active" class="nav-admin" (click)="navOpen = false">
-                <i class="bi bi-shield-lock"></i> {{ i18n.t('nav.admin') }}
-              </a>
-            }
-          </li>
+            </li>
+          }
         </ul>
       </div>
     </div>
   </nav>
 </header>
+}
 
 <ng-template #langSwitch>
   <div class="lang-switch" role="group" [attr.aria-label]="i18n.t('lang.label')">
     <button type="button" [class.active]="i18n.lang() === 'en'" (click)="i18n.setLang('en')" lang="en">EN</button>
     <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="i18n.setLang('ta')" lang="ta">தமிழ்</button>
+    <button type="button" [class.active]="i18n.lang() === 'si'" (click)="i18n.setLang('si')" lang="si">සිංහල</button>
   </div>
 </ng-template>
 
@@ -68,6 +64,7 @@
   <router-outlet />
 </main>
 
+@if (!adminArea()) {
 <footer class="site-footer">
   <div class="container">
     <div class="row g-4">
@@ -76,7 +73,7 @@
           <span class="brand-logo-tile"><img src="logo.svg" alt="" width="34" height="34" /></span>
           <span class="brand-text">
             <span class="brand-name">{{ appName }}</span>
-            <span class="brand-sub">{{ i18n.t('brand.tagline') }}</span>
+            <span class="brand-sub">{{ tagline() }}</span>
           </span>
         </div>
         <p class="footer-copy">{{ i18n.t('footer.about') }}</p>
@@ -95,16 +92,43 @@
           <li>{{ i18n.t('footer.course') }}</li>
           <li>SH_Group_49</li>
           <li><a routerLink="/credits">{{ i18n.t('footer.credits') }}</a></li>
-          <li><a routerLink="/admin/login">{{ i18n.t('footer.adminAccess') }}</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <span>&copy; {{ year }} {{ appName }} — {{ i18n.t('footer.system') }}</span>
-      <span>{{ i18n.t('footer.mapData') }}</span>
+      <span>{{ i18n.t(maps.provider() === 'google' ? 'footer.mapDataGoogle' : 'footer.mapData') }}</span>
     </div>
   </div>
 </footer>
+
+<!-- Phones and tablets: the main links move to a bar at the bottom, within thumb reach. -->
+<nav class="bottom-nav d-lg-none" [attr.aria-label]="i18n.t('nav.main')">
+  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" #exploreLink="routerLinkActive" [attr.aria-current]="exploreLink.isActive ? 'page' : null">
+    <span class="bnav-icon"><i class="bi" [class.bi-grid]="!exploreLink.isActive" [class.bi-grid-fill]="exploreLink.isActive"></i></span>
+    <span class="bnav-label">{{ i18n.t('nav.explore') }}</span>
+  </a>
+  <a routerLink="/map" routerLinkActive="active" #mapLink="routerLinkActive" [attr.aria-current]="mapLink.isActive ? 'page' : null">
+    <span class="bnav-icon"><i class="bi" [class.bi-map]="!mapLink.isActive" [class.bi-map-fill]="mapLink.isActive"></i></span>
+    <span class="bnav-label">{{ i18n.t('nav.map') }}</span>
+  </a>
+  <a routerLink="/planner" routerLinkActive="active" #planLink="routerLinkActive" [attr.aria-current]="planLink.isActive ? 'page' : null">
+    <span class="bnav-icon">
+      <i class="bi" [class.bi-calendar2-check]="!planLink.isActive" [class.bi-calendar2-check-fill]="planLink.isActive"></i>
+      @if (planCount() > 0) {
+        <span class="bnav-badge">{{ planCount() > 99 ? '99+' : planCount() }}</span>
+      }
+    </span>
+    <span class="bnav-label">{{ i18n.t('nav.planShort') }}</span>
+  </a>
+  @if (isAdmin()) {
+    <a routerLink="/admin" routerLinkActive="active" #adminLink="routerLinkActive" [attr.aria-current]="adminLink.isActive ? 'page' : null">
+      <span class="bnav-icon"><i class="bi bi-speedometer2"></i></span>
+      <span class="bnav-label">{{ i18n.t('nav.dashboard') }}</span>
+    </a>
+  }
+</nav>
+}
 
 <div class="toast-stack" aria-live="polite">
   @for (t of toasts(); track t.id) {

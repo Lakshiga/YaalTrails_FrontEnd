@@ -22,17 +22,6 @@
   gap: 0.65rem;
   color: var(--ink);
 }
-.brand-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, var(--brand), #187a6f);
-  color: #fff;
-  font-size: 1.2rem;
-  box-shadow: 0 6px 14px -4px rgba(14, 77, 74, 0.45);
-}
 .brand-logo { width: 40px; height: 40px; flex: none; filter: drop-shadow(0 4px 8px rgba(14, 77, 74, 0.25)); }
 .brand-logo-tile {
   width: 46px;
@@ -47,17 +36,6 @@
 .brand-sub { font-size: 0.72rem; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
 .brand-light { color: #fff; }
 .brand-light .brand-sub { color: rgba(255, 255, 255, 0.6); }
-.brand-light .brand-mark { background: rgba(255, 255, 255, 0.12); box-shadow: none; }
-
-.nav-toggle {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 10px;
-  width: 42px;
-  height: 42px;
-  font-size: 1.35rem;
-  color: var(--ink);
-}
 
 .nav-links {
   list-style: none;
@@ -101,9 +79,8 @@
 .nav-links a.nav-admin.active { border-color: var(--brand-100); background: var(--brand-50); color: var(--brand); }
 
 @media (max-width: 991.98px) {
-  .navbar-collapse { margin-top: 0.75rem; }
-  .nav-links { flex-direction: column; align-items: stretch; padding-bottom: 0.5rem; }
-  .nav-links a { width: 100%; border-radius: 12px; padding: 0.75rem 1rem; }
+  .navbar { padding: 0.55rem 0; }
+  .site-footer { padding-top: 2.5rem; }
 }
 
 /* ---------- Main ---------- */
@@ -159,7 +136,7 @@
 }
 .lang-switch button.active { background: var(--surface); color: var(--brand); box-shadow: var(--shadow-sm); }
 
-/* Keep logo, language switch and menu button on one row on small phones. */
+/* Keep logo and language switch on one row on small phones. */
 @media (max-width: 479.98px) {
   .brand-sub { display: none; }
 }

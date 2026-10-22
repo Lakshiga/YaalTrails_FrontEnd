@@ -1,10 +1,10 @@
-<section class="hero">
+<section class="hero" [style.--hero-image]="heroImage()">
   <div class="hero-pattern" aria-hidden="true"></div>
   <div class="container hero-inner">
     <div class="hero-copy">
-      <span class="hero-eyebrow"><i class="bi bi-geo-alt-fill"></i> {{ i18n.t('home.region') }}</span>
-      <h1 class="hero-title">{{ i18n.t('home.title') }}</h1>
-      <p class="hero-lead">{{ i18n.t('home.lead') }}</p>
+      <span class="hero-eyebrow"><i class="bi bi-geo-alt-fill"></i> {{ heroRegion() }}</span>
+      <h1 class="hero-title">{{ heroTitle() }}</h1>
+      <p class="hero-lead">{{ heroLead() }}</p>
       <div class="hero-actions">
         <button type="button" class="btn btn-accent btn-lg" (click)="scrollToPlaces()">
           {{ i18n.t('home.explore') }} <i class="bi bi-arrow-down"></i>
@@ -16,28 +16,44 @@
     <div class="hero-side">
       <div class="hero-stats">
         <div class="hero-stat">
-          <span class="hero-stat-value">{{ loading() ? '–' : allPlaces().length }}</span>
+          <span class="hero-stat-value">{{ countsReady() ? totalCount() : '–' }}</span>
           <span class="hero-stat-label">{{ i18n.t('home.statPlaces') }}</span>
         </div>
         <div class="hero-stat">
-          <span class="hero-stat-value">{{ loading() ? '–' : categories().length }}</span>
+          <span class="hero-stat-value">{{ countsReady() ? categories().length : '–' }}</span>
           <span class="hero-stat-label">{{ i18n.t('home.statCategories') }}</span>
         </div>
-        <div class="hero-stat">
-          <span class="hero-stat-value">25<small>{{ i18n.t('unit.km') }}</small></span>
-          <span class="hero-stat-label">{{ i18n.t('home.statRadius') }}</span>
-        </div>
-        <a routerLink="/planner" class="hero-stat hero-stat-link">
+        @if (districts.isHomeArea()) {
+          <div class="hero-stat">
+            <span class="hero-stat-value">25<small>{{ i18n.t('unit.km') }}</small></span>
+            <span class="hero-stat-label">{{ i18n.t('home.statRadius') }}</span>
+          </div>
+        } @else {
+          <div class="hero-stat">
+            <span class="hero-stat-value">{{ countsReady() ? popularItems().length : '–' }}</span>
+            <span class="hero-stat-label">{{ i18n.t('home.statPopular') }}</span>
+          </div>
+        }
+        <a routerLink="/planner" class="hero-stat hero-stat-link" (click)="openAreaPlan()">
           <span class="hero-stat-value">{{ planCount() }}</span>
           <span class="hero-stat-label">{{ i18n.t('home.statPlan') }} <i class="bi bi-arrow-right"></i></span>
         </a>
       </div>
-      <app-weather-widget variant="hero" class="mt-3" />
+      <app-weather-widget variant="hero" class="mt-3" [location]="districts.center()" [placeName]="districts.areaName()" />
     </div>
   </div>
 </section>
 
 <section class="container section" #placesSection>
+  <div class="area-bar">
+    <app-area-select />
+    @if (!districts.isHomeArea()) {
+      <p class="area-note"><i class="bi bi-info-circle"></i> {{ i18n.t('area.districtNote', { area: districts.areaName() }) }}</p>
+    }
+  </div>
+
+  <app-popular-places [items]="popularItems()" [title]="i18n.t('popular.title', { area: districts.areaName() })" />
+
   <div class="page-head">
     <div>
       <span class="eyebrow">{{ i18n.t('home.eyebrow') }}</span>
@@ -46,7 +62,7 @@
         @if (loading()) {
           {{ i18n.t('home.loading') }}
         } @else {
-          {{ i18n.t('home.showing', { shown: places().length, total: allPlaces().length }) }}
+          {{ i18n.t('home.showing', { shown: cards().length, total: totalCount() }) }}
         }
       </p>
     </div>
@@ -56,9 +72,10 @@
     </div>
   </div>
 
-  <div class="chip-row mb-4">
+  <div class="filter-bar mb-4">
+  <div class="chip-row">
     <button type="button" class="chip" [class.active]="selectedCategory() === 'All'" (click)="selectCategory('All')">
-      <i class="bi bi-grid"></i> {{ i18n.category('All') }} <span class="count">{{ allPlaces().length }}</span>
+      <i class="bi bi-grid"></i> {{ i18n.category('All') }} <span class="count">{{ totalCount() }}</span>
     </button>
     @for (cat of categories(); track cat.name) {
       <button type="button" class="chip" [class.active]="selectedCategory() === cat.name" (click)="selectCategory(cat.name)">
@@ -66,6 +83,30 @@
       </button>
     }
   </div>
+  <div class="sort-select">
+    <span>{{ i18n.t('home.sortLabel') }}</span>
+    <app-select
+      size="sm"
+      [options]="sortOptions()"
+      [value]="sortMode()"
+      (valueChange)="onSort($event)"
+      [ariaLabel]="i18n.t('home.sortLabel')"
+      [searchable]="false"
+    />
+  </div>
+  </div>
+
+  @switch (districts.external().status) {
+    @case ('loading') {
+      <p class="extra-status" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> {{ i18n.t('ext.loading') }}</p>
+    }
+    @case ('error') {
+      <p class="extra-status warn" role="alert">
+        <i class="bi bi-cloud-slash"></i> {{ i18n.t(districts.external().source === 'google' ? 'ext.errorGoogle' : 'ext.errorOsm') }}
+        <button type="button" class="btn btn-link btn-sm p-0 ms-1" (click)="retryExternal()">{{ i18n.t('common.retry') }}</button>
+      </p>
+    }
+  }
 
   @if (errorMessage()) {
     <div class="alert alert-danger d-flex align-items-center justify-content-between gap-3">
@@ -90,63 +131,168 @@
       }
     }
 
-    @for (place of places(); track place.id) {
+    @for (card of cards(); track card.key) {
       <div class="col-sm-6 col-lg-4">
-        <article class="place-card" [attr.data-category]="place.category">
-          <div class="place-cover" [class.has-image]="!!place.imageUrl">
-            @if (place.imageUrl) {
-              <img [src]="place.imageUrl" [alt]="i18n.placeName(place)" loading="lazy" />
-            } @else {
-              <i class="bi cover-icon" [class]="categoryIcon(place.category)"></i>
-            }
-            <span class="cover-badge"><i class="bi" [class]="categoryIcon(place.category)"></i> {{ i18n.category(place.category) }}</span>
-            <span class="cover-distance"><i class="bi bi-signpost-2"></i> {{ place.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
-          </div>
-          <div class="place-body">
-            <h3 class="place-title">
-              <a [routerLink]="['/places', place.id]" class="stretched-link">{{ i18n.placeName(place) }}</a>
-            </h3>
-            <div class="place-rating">
-              @if (place.reviewCount > 0) {
-                <app-star-rating [value]="place.averageRating ?? 0" size="0.85rem" />
-                <strong>{{ place.averageRating?.toFixed(1) }}</strong>
-                <span>({{ place.reviewCount }})</span>
-              } @else {
-                <span class="no-reviews"><i class="bi bi-star"></i> {{ i18n.t('reviews.noneShort') }}</span>
+        @if (card.kind === 'ours') {
+          @let place = card.place;
+          <article class="place-card" [attr.data-category]="place.category">
+            <div class="place-cover" [class.has-image]="showPhoto(card)" [class.photo-pending]="photoPending(card)">
+              @if (showPhoto(card)) {
+                <img appFadeImage (failed)="photoFailed(card.photoUrl)" [src]="card.photoUrl" [alt]="i18n.placeName(place)" loading="lazy" />
+              } @else if (!photoPending(card)) {
+                <i class="bi cover-icon" [class]="categoryIcon(place.category)"></i>
+              }
+              <span class="cover-badge"><i class="bi" [class]="categoryIcon(place.category)"></i> {{ i18n.category(place.category) }}</span>
+              <span class="cover-distance"><i class="bi bi-signpost-2"></i> {{ card.km }} {{ i18n.t('unit.km') }}</span>
+              @if (isPopular(place)) {
+                <span class="cover-popular"><i class="bi bi-fire"></i> {{ i18n.t('popular.badge') }}</span>
+              }
+              @if (card.photoCredit; as credit) {
+                <span class="cover-credit">
+                  {{ i18n.t('ext.photoBy') }}
+                  @if (credit.url) {
+                    <a [href]="credit.url" target="_blank" rel="noopener">{{ credit.name }}</a>
+                  } @else {
+                    {{ credit.name }}
+                  }
+                  @if (credit.license) {
+                    · {{ credit.license }}
+                  }
+                </span>
               }
             </div>
-            <p class="place-desc">{{ i18n.placeDescription(place) }}</p>
-            <div class="place-meta">
-              <span><i class="bi bi-hourglass-split"></i> {{ i18n.duration(place.visitDuration) }}</span>
+            <div class="place-body">
+              <h3 class="place-title">
+                <a [routerLink]="['/places', place.id]" class="stretched-link">{{ i18n.placeName(place) }}</a>
+              </h3>
+              <div class="place-rating">
+                @if (place.reviewCount > 0) {
+                  <app-star-rating [value]="place.averageRating ?? 0" size="0.85rem" />
+                  <strong>{{ place.averageRating?.toFixed(1) }}</strong>
+                  <span>({{ place.reviewCount }})</span>
+                } @else if (card.googleRating != null) {
+                  <app-star-rating [value]="card.googleRating" size="0.85rem" />
+                  <strong>{{ card.googleRating.toFixed(1) }}</strong>
+                  <span>{{ i18n.t('card.googleRatings', { n: card.googleRatingCount ?? 0 }) }}</span>
+                } @else {
+                  <span class="no-reviews"><i class="bi bi-star"></i> {{ i18n.t('reviews.noneShort') }}</span>
+                }
+              </div>
+              <p class="place-desc">{{ i18n.placeDescription(place) }}</p>
+              <div class="place-meta">
+                <span><i class="bi bi-hourglass-split"></i> {{ i18n.duration(place.visitDuration) }}</span>
+              </div>
             </div>
-          </div>
-          <div class="place-footer">
-            <span class="place-link">{{ i18n.t('card.details') }} <i class="bi bi-arrow-right"></i></span>
-            <button
-              type="button"
-              class="btn btn-sm plan-btn"
-              [class.btn-added]="isInPlan(place)"
-              [class.btn-outline-primary]="!isInPlan(place)"
-              (click)="toggleInPlan(place)"
-            >
-              @if (isInPlan(place)) {
-                <i class="bi bi-check2"></i> {{ i18n.t('card.inPlan') }}
-              } @else {
-                <i class="bi bi-plus-lg"></i> {{ i18n.t('card.add') }}
+            <div class="place-footer">
+              <span class="place-link">{{ i18n.t('card.details') }} <i class="bi bi-arrow-right"></i></span>
+              <button
+                type="button"
+                class="btn btn-sm plan-btn"
+                [class.btn-added]="isInPlan(place)"
+                [class.btn-outline-primary]="!isInPlan(place)"
+                (click)="toggleInPlan(place)"
+              >
+                @if (isInPlan(place)) {
+                  <i class="bi bi-check2"></i> {{ i18n.t('card.inPlan') }}
+                } @else {
+                  <i class="bi bi-plus-lg"></i> {{ i18n.t('card.add') }}
+                }
+              </button>
+            </div>
+          </article>
+        } @else {
+          @let extra = card.place;
+          @let google = extra.source === 'google';
+          <article class="place-card" [attr.data-category]="extra.category">
+            <div class="place-cover" [class.has-image]="showPhoto(card)" [class.photo-pending]="photoPending(card)">
+              @if (showPhoto(card)) {
+                <img appFadeImage (failed)="photoFailed(card.photoUrl)" [src]="card.photoUrl" [alt]="externalName(extra)" loading="lazy" />
+              } @else if (!photoPending(card)) {
+                <i class="bi cover-icon" [class]="categoryIcon(extra.category)"></i>
               }
-            </button>
-          </div>
-        </article>
+              <span class="cover-badge"><i class="bi" [class]="categoryIcon(extra.category)"></i> {{ i18n.category(extra.category) }}</span>
+              <span class="cover-distance"><i class="bi bi-signpost-2"></i> {{ card.km }} {{ i18n.t('unit.km') }}</span>
+              @if (extra.notable) {
+                <span class="cover-popular cover-notable"><i class="bi bi-star-fill"></i> {{ i18n.t('ext.notable') }}</span>
+              }
+              @if (card.photoCredit; as credit) {
+                <span class="cover-credit">
+                  {{ i18n.t('ext.photoBy') }}
+                  @if (credit.url) {
+                    <a [href]="credit.url" target="_blank" rel="noopener">{{ credit.name }}</a>
+                  } @else {
+                    {{ credit.name }}
+                  }
+                  @if (credit.license) {
+                    · {{ credit.license }}
+                  }
+                </span>
+              }
+            </div>
+            <div class="place-body">
+              <h3 class="place-title">
+                @if (card.link) {
+                  <a [routerLink]="card.link" class="stretched-link">{{ externalName(extra) }}</a>
+                } @else {
+                  <a [href]="extra.url" target="_blank" rel="noopener" class="stretched-link">{{ externalName(extra) }}</a>
+                }
+              </h3>
+              <div class="place-rating">
+                @if (extra.rating != null) {
+                  <app-star-rating [value]="extra.rating" size="0.85rem" />
+                  <strong>{{ extra.rating.toFixed(1) }}</strong>
+                  <span>{{ i18n.t('card.googleRatings', { n: extra.ratingCount ?? 0 }) }}</span>
+                } @else {
+                  <span class="no-reviews"><i class="bi bi-star"></i> {{ i18n.t('reviews.noneShort') }}</span>
+                }
+              </div>
+              <p class="place-desc">
+                <i class="bi" [class.bi-google]="google" [class.bi-globe2]="!google"></i>
+                {{ i18n.t(google ? 'card.fromGoogle' : 'card.fromOsm') }}
+              </p>
+            </div>
+            <div class="place-footer">
+              @if (card.link) {
+                <span class="place-link">{{ i18n.t('card.details') }} <i class="bi bi-arrow-right"></i></span>
+              } @else {
+                <span class="place-link">{{ i18n.t('card.viewOsm') }} <i class="bi bi-box-arrow-up-right"></i></span>
+              }
+              <button
+                type="button"
+                class="btn btn-sm plan-btn"
+                [class.btn-added]="isInPlan(card.planPlace)"
+                [class.btn-outline-primary]="!isInPlan(card.planPlace)"
+                (click)="toggleInPlan(card.planPlace)"
+              >
+                @if (isInPlan(card.planPlace)) {
+                  <i class="bi bi-check2"></i> {{ i18n.t('card.inPlan') }}
+                } @else {
+                  <i class="bi bi-plus-lg"></i> {{ i18n.t('card.add') }}
+                }
+              </button>
+            </div>
+          </article>
+        }
       </div>
     }
   </div>
 
-  @if (!loading() && !errorMessage() && places().length === 0) {
+  @if (!loading() && !errorMessage() && cards().length === 0) {
     <div class="empty-state">
       <div class="empty-icon"><i class="bi bi-search"></i></div>
       <h2>{{ i18n.t('home.emptyTitle') }}</h2>
       <p>{{ i18n.t('home.emptyText') }}</p>
       <button type="button" class="btn btn-primary" (click)="clearFilters()"><i class="bi bi-x-circle"></i> {{ i18n.t('home.clear') }}</button>
     </div>
+  }
+
+  @if (districts.external().status === 'ready' && extraPlaces().length > 0) {
+    <p class="extra-credit">
+      @if (districts.external().source === 'google') {
+        {{ i18n.t('ext.creditGoogle') }} <strong>Google Maps</strong>
+      } @else {
+        {{ i18n.t('ext.creditOsm') }} <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
+      }
+    </p>
   }
 </section>

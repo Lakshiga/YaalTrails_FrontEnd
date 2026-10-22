@@ -18,13 +18,17 @@
 }
 
 @if (place(); as p) {
-  <section class="detail-hero" [attr.data-category]="p.category" [class.has-image]="!!p.imageUrl">
-    @if (p.imageUrl) {
-      <img class="detail-hero-img" [src]="p.imageUrl" [alt]="i18n.placeName(p)" />
+  <section class="detail-hero" [attr.data-category]="p.category" [class.has-image]="!!heroImage()" [class.photo-pending]="heroPending()">
+    @if (heroImage(); as image) {
+      <img class="detail-hero-img" appFadeImage [src]="image" [alt]="i18n.placeName(p)" />
     }
     <div class="container detail-hero-inner">
       <nav class="crumbs" aria-label="Breadcrumb">
         <a routerLink="/">{{ i18n.t('nav.explore') }}</a>
+        @if (town()?.district; as d) {
+          <i class="bi bi-chevron-right"></i>
+          <span>{{ i18n.districtName(d) }}</span>
+        }
         <i class="bi bi-chevron-right"></i>
         <span>{{ i18n.category(p.category) }}</span>
         <i class="bi bi-chevron-right"></i>
@@ -39,7 +43,9 @@
             {{ p.averageRating?.toFixed(1) }} · {{ reviewCountLabel(p.reviewCount) }}
           </span>
         }
-        <span><i class="bi bi-signpost-2"></i> {{ i18n.t('detail.fromTown', { km: p.distanceFromHomeKm }) }}</span>
+        @if (town(); as t) {
+          <span><i class="bi bi-signpost-2"></i> {{ i18n.t('detail.fromPlace', { km: t.km, place: t.name }) }}</span>
+        }
         <span><i class="bi bi-hourglass-split"></i> {{ i18n.duration(p.visitDuration) }}</span>
       </div>
     </div>
@@ -49,7 +55,7 @@
         <a [href]="c.source" target="_blank" rel="noopener">{{ c.license }}</a>
       </div>
     }
-    @if (!p.imageUrl) {
+    @if (!heroImage() && !heroPending()) {
       <i class="bi detail-hero-icon" [class]="categoryIcon(p.category)" aria-hidden="true"></i>
     }
   </section>
@@ -81,7 +87,7 @@
             <div class="info-tile">
               <span class="info-icon"><i class="bi bi-signpost-2"></i></span>
               <span class="info-label">{{ i18n.t('detail.distance') }}</span>
-              <span class="info-value">{{ p.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
+              <span class="info-value">{{ town()?.km ?? p.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</span>
             </div>
           </div>
         </div>
@@ -187,15 +193,15 @@
 
       <div class="col-lg-5 col-xl-4">
         <aside class="surface side-card">
-          <app-leaflet-map [places]="[p]" height="260px" />
+          <app-map [places]="[p]" height="260px" />
           <div class="side-body">
             <div class="side-row">
               <span><i class="bi bi-geo-alt"></i> {{ i18n.t('detail.coords') }}</span>
               <strong>{{ p.latitude.toFixed(4) }}, {{ p.longitude.toFixed(4) }}</strong>
             </div>
             <div class="side-row">
-              <span><i class="bi bi-signpost-2"></i> {{ i18n.t('detail.fromTownShort') }}</span>
-              <strong>{{ p.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</strong>
+              <span><i class="bi bi-signpost-2"></i> {{ i18n.t('detail.fromPlaceShort', { place: town()?.name ?? i18n.t('map.home') }) }}</span>
+              <strong>{{ town()?.km ?? p.distanceFromHomeKm }} {{ i18n.t('unit.km') }}</strong>
             </div>
 
             <button type="button" class="btn btn-lg w-100 mt-3" [class.btn-added]="isInPlan()" [class.btn-primary]="!isInPlan()" (click)="toggleInPlan()">
@@ -231,7 +237,7 @@
               <article class="nearby-card" [attr.data-category]="n.place.category">
                 <div class="nearby-img">
                   @if (n.place.imageUrl) {
-                    <img [src]="n.place.imageUrl" [alt]="i18n.placeName(n.place)" loading="lazy" />
+                    <img appFadeImage [src]="n.place.imageUrl" [alt]="i18n.placeName(n.place)" loading="lazy" />
                   } @else {
                     <i class="bi" [class]="categoryIcon(n.place.category)"></i>
                   }

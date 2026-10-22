@@ -5,7 +5,7 @@
   color: #fff;
   background:
     linear-gradient(100deg, rgba(8, 44, 42, 0.96) 0%, rgba(10, 58, 56, 0.88) 45%, rgba(10, 58, 56, 0.55) 100%),
-    url('/images/places/nallur-kandaswamy-kovil.jpg') center 35% / cover no-repeat,
+    var(--hero-image, url('/images/places/nallur-kandaswamy-kovil.jpg')) center 35% / cover no-repeat,
     #0a3a38;
 }
 .hero-pattern {

@@ -11,6 +11,20 @@
 .sidebar-head { padding: 1rem; border-bottom: 1px solid var(--line-2); }
 .chip-sm { padding: 0.3rem 0.75rem; font-size: 0.8rem; }
 .sidebar-count { margin-top: 0.75rem; font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+.sidebar-note { display: block; font-weight: 400; }
+
+.locate-box { display: flex; flex-direction: column; align-items: flex-start; gap: 0.45rem; margin-top: 0.85rem; }
+.locate-msg { font-size: 0.78rem; line-height: 1.4; color: var(--muted); }
+.locate-msg .ok { color: var(--brand); font-weight: 600; }
+.locate-msg .warn { color: #9b5a12; font-weight: 600; }
+
+.osm-toggle { display: flex; align-items: flex-start; gap: 0.5rem; margin-top: 0.6rem; font-size: 0.8rem; color: var(--ink-2); cursor: pointer; }
+.osm-toggle .form-check-input { margin-top: 0.15rem; }
+.osm-count { color: var(--muted); }
+.osm-count.warn { color: #9b5a12; }
+
+.map-empty, .map-hidden-note { margin: 0.75rem; font-size: 0.82rem; color: var(--muted); }
+.map-empty { padding: 1.5rem 0.5rem; text-align: center; }
 
 .sidebar-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
 .map-item {
@@ -37,14 +51,26 @@
 .map-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .map-item-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .map-item-meta { font-size: 0.78rem; color: var(--muted); }
+.map-item-source { margin-left: 0.35rem; padding: 0 0.4rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; background: var(--line-2); color: var(--ink-2); }
+.map-item-icon { position: relative; }
 .map-item-dist { flex: none; font-size: 0.78rem; font-weight: 700; color: var(--ink-2); background: var(--line-2); padding: 0.2rem 0.55rem; border-radius: 999px; }
 
 .map-frame { padding: 0.4rem; height: 100%; }
-.map-frame app-leaflet-map { height: 100%; }
+.map-frame app-map { height: 100%; }
 
+/* Tablets: list and map side by side, a little shorter. */
 @media (max-width: 991.98px) {
-  .map-layout { grid-template-columns: 1fr; height: auto; }
-  .map-frame { height: 440px; order: -1; }
-  .map-sidebar { max-height: 480px; }
+  .map-layout { grid-template-columns: 300px 1fr; height: min(600px, calc(100svh - 190px)); min-height: 460px; }
+}
+/* Phones: map first, sized to the screen; the list then scrolls with the page (no scroll box inside the page). */
+@media (max-width: 767.98px) {
+  .map-layout { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; gap: 1rem; }
+  .map-sidebar { min-width: 0; }
+  .map-frame { height: clamp(300px, 58svh, 520px); order: -1; }
+  .map-sidebar { overflow: visible; }
+  .sidebar-list { overflow: visible; }
+  .sidebar-head .chip-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem 0.15rem; }
+  .sidebar-head .chip-row::-webkit-scrollbar { display: none; }
+  .sidebar-head .chip { flex: none; }
 }
 .map-item-icon img { width: 100%; height: 100%; object-fit: cover; }
