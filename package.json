@@ -3,9 +3,13 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "node scripts/set-env.mjs",
     "start": "ng serve",
+    "prebuild": "node scripts/set-env.mjs",
     "build": "ng build",
+    "prewatch": "node scripts/set-env.mjs",
     "watch": "ng build --watch --configuration development",
+    "pretest": "node scripts/set-env.mjs",
     "test": "ng test"
   },
   "private": true,
@@ -29,6 +33,7 @@
     "@angular-devkit/build-angular": "^22.2.2",
     "@angular/cli": "^22.2.2",
     "@angular/compiler-cli": "^22.2.2",
+    "@types/google.maps": "^3.66.6",
     "@types/jasmine": "~5.1.0",
     "@types/leaflet": "^1.9.22",
     "istanbul-lib-instrument": "^6.0.3",

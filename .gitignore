@@ -40,3 +40,11 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Local settings and keys: copy .env.example to .env (never committed)
+.env
+.env.*
+!.env.example
+# Generated from .env by scripts/set-env.mjs
+src/environments/env.generated.ts
+/.angular
