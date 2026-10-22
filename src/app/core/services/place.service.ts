@@ -9,11 +9,13 @@ export class PlaceService {
   private http = inject(HttpClient);
   private baseUrl = `${API_BASE_URL}/places`;
 
-  getAll(category?: string): Observable<Place[]> {
+  /** includeHidden: the administrator also gets places hidden from visitors. */
+  getAll(category?: string, includeHidden = false): Observable<Place[]> {
     let params = new HttpParams();
     if (category && category !== 'All') {
       params = params.set('category', category);
     }
+    if (includeHidden) params = params.set('includeHidden', 'true');
     return this.http.get<Place[]>(this.baseUrl, { params });
   }
 
@@ -31,6 +33,11 @@ export class PlaceService {
 
   update(id: number, place: PlaceUpsert): Observable<Place> {
     return this.http.put<Place>(`${this.baseUrl}/${id}`, place);
+  }
+
+  /** Administrator: hide a place from visitors (kept in the database), or show it again. */
+  setVisibility(id: number, hidden: boolean): Observable<Place> {
+    return this.http.put<Place>(`${this.baseUrl}/${id}/visibility`, { hidden });
   }
 
   delete(id: number): Observable<void> {
