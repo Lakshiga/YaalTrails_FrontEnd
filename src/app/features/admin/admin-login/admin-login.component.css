@@ -1,48 +1,45 @@
-.login-wrap {
-  min-height: calc(100vh - 260px);
-  display: grid;
-  place-items: center;
-  padding: 3rem 1rem;
-  background:
-    radial-gradient(600px 300px at 50% 0%, rgba(14, 77, 74, 0.08), transparent 70%);
-}
-.login-card { width: 100%; max-width: 440px; padding: 2.5rem 2.25rem 2rem; box-shadow: var(--shadow-lg); }
-.login-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  font-size: 1.5rem;
-  color: #fff;
-  background: linear-gradient(135deg, var(--brand), #187a6f);
-  margin-bottom: 1.25rem;
-}
-.login-title { font-family: var(--font-display); font-size: 1.75rem; margin-bottom: 0.35rem; }
-.login-sub { color: var(--muted); margin: 0; }
+.lg { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); background: var(--bg); }
 
-.password-field .form-control { padding-right: 2.8rem; }
+.lg-art {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem; padding: 2.5rem 3rem; color: #fff;
+  background: linear-gradient(160deg, rgba(10, 58, 56, 0.55), rgba(10, 58, 56, 0.92) 70%), url('/images/places/jaffna-fort.jpg') center / cover no-repeat;
+}
+.lg-art-brand { display: flex; align-items: center; gap: 0.7rem; font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; }
+.lg-art-copy h2 { color: #fff; font-family: var(--font-display); font-size: clamp(2rem, 1.2rem + 2vw, 2.9rem); margin-bottom: 1.25rem; }
+.lg-art-copy ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.8rem; font-size: 1rem; color: rgba(255, 255, 255, 0.88); }
+.lg-art-copy li { display: flex; align-items: center; gap: 0.75rem; }
+.lg-art-copy li .bi {
+  flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.lg-art-foot { margin: 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.65); }
+
+.lg-main { display: grid; place-items: center; padding: 2rem 1.25rem; }
+.lg-card { width: 100%; max-width: 400px; }
+.lg-mobile-brand { display: none; align-items: center; gap: 0.6rem; margin-bottom: 2rem; font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--ink); }
+.lg-title { font-family: var(--font-display); font-size: 2.1rem; margin-bottom: 0.3rem; }
+.lg-sub { color: var(--muted); margin: 0 0 1.5rem; }
+.lg-form { display: grid; gap: 1.1rem; }
+.lg-form .form-control-lg { font-size: 1rem; padding-top: 0.7rem; padding-bottom: 0.7rem; }
+
+.password-field .form-control { padding-right: 3rem; }
 .reveal-btn {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; color: var(--muted); width: 38px; height: 38px; border-radius: 8px;
 }
 .reveal-btn:hover { background: var(--line-2); color: var(--ink); }
+.lg-caps { margin-top: 0.4rem; font-size: 0.8rem; font-weight: 600; color: #9b5a12; }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--muted);
-}
+.lg-alert { display: flex; gap: 0.55rem; align-items: flex-start; padding: 0.7rem 0.85rem; border-radius: 12px; font-size: 0.875rem; font-weight: 600; }
+.lg-alert.error { background: #fdecea; color: #a1281c; }
+.lg-alert.info { background: var(--brand-50); color: var(--brand-700); margin-bottom: 1.1rem; }
+
+.back-link { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1.75rem; font-size: 0.875rem; font-weight: 600; color: var(--muted); }
 .back-link:hover { color: var(--brand); }
+
+@media (max-width: 991.98px) {
+  .lg { grid-template-columns: 1fr; background: radial-gradient(700px 320px at 50% 0%, rgba(14, 77, 74, 0.1), transparent 70%), var(--bg); }
+  .lg-art { display: none; }
+  .lg-mobile-brand { display: flex; }
+  .lg-main { align-items: start; padding-top: max(3rem, 10vh); }
+}
