@@ -1,0 +1,208 @@
+@switch (status()) {
+  @case ('loading') {
+    <div class="container section">
+      <div class="skeleton mb-3" style="height: 16px; width: 200px"></div>
+      <div class="skeleton mb-4" style="height: 40px; width: 55%"></div>
+      <div class="skeleton" style="height: 260px"></div>
+    </div>
+  }
+  @case ('unavailable') {
+    <div class="container section">
+      <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-cloud-slash"></i></div>
+        <h2>{{ i18n.t('gplace.unavailable') }}</h2>
+        <p>{{ i18n.t('gplace.unavailableText') }}</p>
+        <a routerLink="/" class="btn btn-primary"><i class="bi bi-arrow-left"></i> {{ i18n.t('detail.back') }}</a>
+      </div>
+    </div>
+  }
+  @case ('notFound') {
+    <div class="container section">
+      <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-geo"></i></div>
+        <h2>{{ i18n.t('detail.notFound') }}</h2>
+        <p>{{ i18n.t('detail.notFoundText') }}</p>
+        <a routerLink="/" class="btn btn-primary"><i class="bi bi-arrow-left"></i> {{ i18n.t('detail.back') }}</a>
+      </div>
+    </div>
+  }
+  @case ('ready') {
+    @if (details(); as d) {
+      <section class="detail-hero" [attr.data-category]="d.place.category" [class.has-image]="!!heroPhoto()" [class.photo-pending]="heroPending()">
+        @if (heroPhoto(); as photo) {
+          <img class="detail-hero-img" appFadeImage [src]="photo.url" [alt]="d.place.name" />
+        }
+        <div class="container detail-hero-inner">
+          <nav class="crumbs" aria-label="Breadcrumb">
+            <a routerLink="/">{{ i18n.t('nav.explore') }}</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>{{ i18n.category(d.place.category) }}</span>
+            <i class="bi bi-chevron-right"></i>
+            <span class="current">{{ d.place.name }}</span>
+          </nav>
+          <span class="detail-badge"><i class="bi" [class]="categoryIcon(d.place.category)"></i> {{ i18n.category(d.place.category) }}</span>
+          <h1 class="detail-title">{{ d.place.name }}</h1>
+          <div class="detail-quick">
+            @if (d.place.rating != null) {
+              <span class="hero-rating">
+                <app-star-rating [value]="d.place.rating" size="0.95rem" />
+                {{ d.place.rating.toFixed(1) }} · {{ i18n.t('card.googleRatings', { n: d.place.ratingCount ?? 0 }) }}
+              </span>
+            }
+            @if (d.address) {
+              <span><i class="bi bi-geo-alt"></i> {{ d.address }}</span>
+            }
+          </div>
+        </div>
+        @if (heroPhoto()?.credit; as credit) {
+          <div class="hero-credit">
+            <i class="bi bi-camera"></i>
+            @if (credit.url) {
+              <a [href]="credit.url" target="_blank" rel="noopener">{{ credit.name }}</a>
+            } @else {
+              {{ credit.name }}
+            }
+            @if (credit.license) {
+              · {{ credit.license }}
+            }
+          </div>
+        }
+        @if (!heroPhoto() && !heroPending()) {
+          <i class="bi detail-hero-icon" [class]="categoryIcon(d.place.category)" aria-hidden="true"></i>
+        }
+      </section>
+
+      <div class="container section" [attr.data-category]="d.place.category">
+        <div class="row g-4 g-xl-5">
+          <div class="col-lg-7 col-xl-8">
+            <div class="surface content-card">
+              <h2 class="content-heading">{{ i18n.t('detail.about') }}</h2>
+              <p class="detail-description">{{ d.summary || i18n.t('gplace.noSummary') }}</p>
+            </div>
+
+            <div class="row g-3 mt-1">
+              <div class="col-md-6">
+                <div class="info-tile">
+                  <span class="info-icon"><i class="bi bi-clock"></i></span>
+                  <span class="info-label">{{ i18n.t('detail.hours') }}</span>
+                  @if (d.hours.length > 0) {
+                    <ul class="gp-hours">
+                      @for (line of d.hours; track line) {
+                        <li>{{ line }}</li>
+                      }
+                    </ul>
+                  } @else {
+                    <span class="info-value">{{ i18n.t('gplace.noHours') }}</span>
+                  }
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-tile">
+                  <span class="info-icon"><i class="bi bi-info-circle"></i></span>
+                  <span class="info-label">{{ i18n.t('gplace.contact') }}</span>
+                  <span class="info-value">
+                    @if (d.phone) {
+                      <span class="d-block"><i class="bi bi-telephone"></i> {{ d.phone }}</span>
+                    }
+                    @if (d.website) {
+                      <a class="d-block" [href]="d.website" target="_blank" rel="noopener"><i class="bi bi-globe2"></i> {{ i18n.t('gplace.website') }}</a>
+                    }
+                    @if (!d.phone && !d.website) {
+                      {{ i18n.t('gplace.noContact') }}
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            @if (morePhotos().length > 0) {
+              <h2 class="content-heading mt-4">{{ i18n.t('gplace.photos') }}</h2>
+              <div class="gp-gallery">
+                @for (photo of morePhotos(); track photo.url) {
+                  <figure class="gp-photo">
+                    <img appFadeImage [src]="photo.url" [alt]="d.place.name" loading="lazy" />
+                    @if (photo.credit; as credit) {
+                      <figcaption>
+                        @if (credit.url) {
+                          <a [href]="credit.url" target="_blank" rel="noopener">{{ credit.name }}</a>
+                        } @else {
+                          {{ credit.name }}
+                        }
+                      </figcaption>
+                    }
+                  </figure>
+                }
+              </div>
+            }
+
+            <section class="reviews">
+              <span class="eyebrow">{{ i18n.t('gplace.reviewsEyebrow') }}</span>
+              <h2 class="reviews-title">{{ i18n.t('gplace.reviewsTitle') }}</h2>
+              @if (d.reviews.length === 0) {
+                <p class="reviews-empty"><i class="bi bi-chat-square"></i> {{ i18n.t('gplace.noReviews') }}</p>
+              } @else {
+                <ul class="review-list">
+                  @for (r of d.reviews; track $index) {
+                    <li class="review-item surface">
+                      <div class="review-head">
+                        @if (r.authorPhoto) {
+                          <img class="review-avatar" [src]="r.authorPhoto" alt="" referrerpolicy="no-referrer" />
+                        } @else {
+                          <span class="review-avatar"><i class="bi bi-person"></i></span>
+                        }
+                        <div class="review-who">
+                          @if (r.authorUrl) {
+                            <a [href]="r.authorUrl" target="_blank" rel="noopener"><strong>{{ r.author }}</strong></a>
+                          } @else {
+                            <strong>{{ r.author }}</strong>
+                          }
+                          <span>{{ r.when }}</span>
+                        </div>
+                        @if (r.rating != null) {
+                          <app-star-rating [value]="r.rating" size="0.9rem" />
+                        }
+                      </div>
+                      <p class="review-text">{{ r.text }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+              <p class="gp-attribution">{{ i18n.t('ext.creditGoogle') }} <strong>Google Maps</strong></p>
+            </section>
+          </div>
+
+          <div class="col-lg-5 col-xl-4">
+            <aside class="surface side-card">
+              @if (asPlace(); as p) {
+                <app-map [places]="[p]" height="260px" />
+              }
+              <div class="side-body">
+                <div class="side-row">
+                  <span><i class="bi bi-geo-alt"></i> {{ i18n.t('detail.coords') }}</span>
+                  <strong>{{ d.place.latitude.toFixed(4) }}, {{ d.place.longitude.toFixed(4) }}</strong>
+                </div>
+
+                <button type="button" class="btn btn-lg w-100 mt-3" [class.btn-added]="isInPlan()" [class.btn-primary]="!isInPlan()" (click)="toggleInPlan()">
+                  @if (isInPlan()) {
+                    <i class="bi bi-check2-circle"></i> {{ i18n.t('detail.added') }}
+                  } @else {
+                    <i class="bi bi-plus-circle"></i> {{ i18n.t('detail.add') }}
+                  }
+                </button>
+                @if (isInPlan()) {
+                  <a routerLink="/planner" class="btn btn-soft w-100 mt-2"><i class="bi bi-calendar2-check"></i> {{ i18n.t('detail.viewPlan') }}</a>
+                }
+                <a [href]="directionsUrl()" target="_blank" rel="noopener" class="btn btn-soft w-100 mt-2">
+                  <i class="bi bi-sign-turn-right"></i> {{ i18n.t('detail.directions') }}
+                </a>
+                <a [href]="d.place.url" target="_blank" rel="noopener" class="btn btn-soft w-100 mt-2">
+                  <i class="bi bi-google"></i> {{ i18n.t('card.viewGoogle') }}
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    }
+  }
+}
