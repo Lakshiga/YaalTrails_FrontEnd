@@ -1,155 +1,206 @@
-<div class="container section">
-  <div class="page-head">
+<div class="adm">
+  <header class="adm-head">
     <div>
-      <span class="eyebrow"><i class="bi bi-shield-check"></i> Administrator</span>
-      <h1 class="mt-1">Dashboard</h1>
-      <p>Add, update or remove the places shown to visitors.</p>
+      <h1>{{ heading().title }}</h1>
+      <p class="adm-lead">{{ heading().lead }}</p>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-      <button type="button" class="btn btn-soft" (click)="logout()"><i class="bi bi-box-arrow-right"></i> Log out</button>
-      <a routerLink="/admin/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add new place</a>
+    <div class="adm-head-actions">
+      <a routerLink="/admin/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> <span>Add place</span></a>
     </div>
+  </header>
+
+  <!-- Status tiles double as shortcuts to the matching tab. -->
+  <div class="adm-stats">
+    <button type="button" class="adm-stat" (click)="setTab('places', 'all')">
+      <span class="adm-stat-icon"><i class="bi bi-geo-alt"></i></span>
+      <span class="adm-stat-value">{{ admin.loading() ? '–' : admin.places().length }}</span>
+      <span class="adm-stat-label">Your places</span>
+    </button>
+    <button type="button" class="adm-stat" (click)="setTab('places', 'visible')">
+      <span class="adm-stat-icon ok"><i class="bi bi-eye"></i></span>
+      <span class="adm-stat-value">{{ admin.loading() ? '–' : admin.visibleCount() }}</span>
+      <span class="adm-stat-label">Visible to visitors</span>
+    </button>
+    <button type="button" class="adm-stat" (click)="setTab('hidden')">
+      <span class="adm-stat-icon warn"><i class="bi bi-eye-slash"></i></span>
+      <span class="adm-stat-value">{{ admin.loading() ? '–' : hiddenTotal() }}</span>
+      <span class="adm-stat-label">Hidden (all sources)</span>
+    </button>
+    <button type="button" class="adm-stat" (click)="setTab('reviews')">
+      <span class="adm-stat-icon accent"><i class="bi bi-chat-square-text"></i></span>
+      <span class="adm-stat-value">{{ admin.reviewsLoading() ? '–' : admin.reviews().length }}</span>
+      <span class="adm-stat-label">Visitor reviews</span>
+    </button>
   </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-lg">
-      <div class="stat">
-        <span class="stat-icon"><i class="bi bi-geo-alt"></i></span>
-        <div>
-          <div class="stat-label">Total places</div>
-          <div class="stat-value">{{ loading() ? '–' : places().length }}</div>
-        </div>
-      </div>
+  @if (admin.error()) {
+    <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <span><i class="bi bi-exclamation-triangle me-2"></i>{{ admin.error() }}</span>
+      <button type="button" class="btn btn-sm btn-soft" (click)="admin.load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
     </div>
-    @for (c of categoryCounts(); track c.name) {
-      <div class="col-6 col-lg">
-        <div class="stat" [attr.data-category]="c.name">
-          <span class="stat-icon cat"><i class="bi" [class]="categoryIcon(c.name)"></i></span>
-          <div>
-            <div class="stat-label">{{ c.name }}</div>
-            <div class="stat-value">{{ loading() ? '–' : c.count }}</div>
-          </div>
-        </div>
-      </div>
-    }
-  </div>
-
-  @if (errorMessage()) {
-    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage() }}</div>
   }
 
-  <div class="surface table-card">
-    <div class="table-toolbar">
-      <h2 class="h6 mb-0">All places</h2>
-      <div class="input-icon toolbar-search">
-        <i class="bi bi-search"></i>
-        <input type="search" class="form-control form-control-sm" placeholder="Search by name or category…" (input)="onSearch($event)" aria-label="Search places" />
-      </div>
-    </div>
+  @switch (tab()) {
+    <!-- ================= Your places ================= -->
+    @case ('places') {
+      <section class="surface adm-panel" role="tabpanel" aria-label="Your places">
+        <div class="adm-toolbar">
+          <div class="input-icon adm-search">
+            <i class="bi bi-search"></i>
+            <input type="search" class="form-control" placeholder="Search name, category or district…" [value]="search()" (input)="onSearch($event)" aria-label="Search places" />
+          </div>
+          <app-select class="adm-select" [pill]="true" [options]="districtFilterOptions()" [value]="districtFilter()" (valueChange)="districtFilter.set($event ?? 'all')" ariaLabel="District" searchPlaceholder="Search districts…" />
+          <div class="adm-segment" role="group" aria-label="Status">
+            @for (s of [{ v: 'all', l: 'All' }, { v: 'visible', l: 'Visible' }, { v: 'hidden', l: 'Hidden' }, { v: 'popular', l: 'Popular' }]; track s.v) {
+              <button type="button" [class.active]="statusFilter() === s.v" [attr.aria-pressed]="statusFilter() === s.v" (click)="statusFilter.set($any(s.v))">{{ s.l }}</button>
+            }
+          </div>
+        </div>
 
-    @if (loading()) {
-      <div class="p-3">
-        @for (s of [1, 2, 3, 4]; track s) {
-          <div class="skeleton mb-2" style="height: 48px"></div>
-        }
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table class="table admin-table align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Place</th>
-              <th>Category</th>
-              <th>Distance</th>
-              <th>Rating</th>
-              <th class="d-none d-md-table-cell">Opening hours</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        @if (admin.loading()) {
+          <div class="adm-list">
+            @for (s of [1, 2, 3, 4]; track s) {
+              <div class="adm-row"><div class="skeleton adm-thumb"></div><div class="skeleton" style="height: 38px"></div></div>
+            }
+          </div>
+        } @else if (filteredPlaces().length === 0) {
+          <div class="adm-empty">
+            <i class="bi bi-search"></i>
+            @if (admin.places().length === 0) {
+              <p>No places yet.</p>
+              <a routerLink="/admin/new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add the first place</a>
+            } @else {
+              <p>No places match these filters.</p>
+              <button type="button" class="btn btn-soft btn-sm" (click)="clearFilters()">Clear filters</button>
+            }
+          </div>
+        } @else {
+          <div class="adm-list">
             @for (place of filteredPlaces(); track place.id) {
-              <tr [attr.data-category]="place.category">
-                <td>
-                  <div class="d-flex align-items-center gap-3">
-                    <span class="row-thumb">
-                      @if (place.imageUrl) {
-                        <img [src]="place.imageUrl" alt="" loading="lazy" />
-                      } @else {
-                        <i class="bi" [class]="categoryIcon(place.category)"></i>
-                      }
-                    </span>
-                    <div>
-                      <a [routerLink]="['/places', place.id]" class="place-name">{{ place.name }}</a>
-                      <div class="place-coords">{{ place.latitude.toFixed(4) }}, {{ place.longitude.toFixed(4) }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="cat-badge"><i class="bi" [class]="categoryIcon(place.category)"></i> {{ place.category }}</span></td>
-                <td class="fw-semibold">{{ place.distanceFromHomeKm }} km</td>
-                <td class="text-nowrap">
-                  @if (place.reviewCount > 0) {
-                    <i class="bi bi-star-fill text-warning"></i> <strong>{{ place.averageRating?.toFixed(1) }}</strong>
-                    <span class="text-muted small">({{ place.reviewCount }})</span>
+              <article class="adm-row" [class.is-hidden]="place.isHidden" [attr.data-category]="place.category">
+                <span class="adm-thumb">
+                  @if (place.imageUrl) {
+                    <img [src]="place.imageUrl" alt="" loading="lazy" />
                   } @else {
-                    <span class="text-muted small">—</span>
+                    <i class="bi" [class]="categoryIcon(place.category)"></i>
                   }
-                </td>
-                <td class="d-none d-md-table-cell text-muted small">{{ place.openingHours }}</td>
-                <td class="text-end text-nowrap">
-                  <a [routerLink]="['/admin/edit', place.id]" class="btn btn-soft btn-icon me-1" title="Edit" [attr.aria-label]="'Edit ' + place.name">
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                  <button type="button" class="btn btn-outline-danger btn-icon" (click)="deletePlace(place)" title="Delete" [attr.aria-label]="'Delete ' + place.name">
+                </span>
+                <div class="adm-main">
+                  <div class="adm-title">
+                    <a [routerLink]="['/places', place.id]">{{ place.name }}</a>
+                    @if (place.isPopular) {
+                      <span class="adm-badge popular"><i class="bi bi-fire"></i> Popular</span>
+                    }
+                    @if (place.isHidden) {
+                      <span class="adm-badge hidden"><i class="bi bi-eye-slash"></i> Hidden</span>
+                    }
+                  </div>
+                  <div class="adm-meta">
+                    <span class="cat-badge"><i class="bi" [class]="categoryIcon(place.category)"></i> {{ place.category }}</span>
+                    <span><i class="bi bi-geo"></i> {{ districtName(place.district) }}</span>
+                    @if (place.reviewCount > 0) {
+                      <span><i class="bi bi-star-fill text-warning"></i> {{ place.averageRating?.toFixed(1) }} ({{ place.reviewCount }})</span>
+                    }
+                    @if (place.openingHours) {
+                      <span class="adm-hours"><i class="bi bi-clock"></i> {{ place.openingHours }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="adm-actions">
+                  <label class="adm-switch" [title]="place.isHidden ? 'Hidden from visitors — switch on to show' : 'Visible to visitors — switch off to hide'">
+                    <input type="checkbox" role="switch" [checked]="!place.isHidden" (change)="toggleVisibility(place)" [disabled]="busy() === 'place-' + place.id" [attr.aria-label]="'Show ' + place.name + ' to visitors'" />
+                    <span class="adm-switch-track" aria-hidden="true"></span>
+                    <span class="adm-switch-label">{{ place.isHidden ? 'Hidden' : 'Visible' }}</span>
+                  </label>
+                  <a [routerLink]="['/admin/edit', place.id]" class="btn btn-soft btn-icon" title="Edit" [attr.aria-label]="'Edit ' + place.name"><i class="bi bi-pencil"></i></a>
+                  <button type="button" class="btn btn-outline-danger btn-icon" (click)="deletePlace(place)" [disabled]="busy() === 'place-' + place.id" title="Delete" [attr.aria-label]="'Delete ' + place.name">
                     <i class="bi bi-trash3"></i>
                   </button>
-                </td>
-              </tr>
+                </div>
+              </article>
             }
-          </tbody>
-        </table>
-      </div>
-
-      @if (filteredPlaces().length === 0) {
-        <div class="text-center text-muted py-5">
-          @if (places().length === 0) {
-            No places yet. Click <strong>Add new place</strong> to create one.
-          } @else {
-            No places match your search.
-          }
-        </div>
-      }
-    }
-  </div>
-
-  <div class="surface table-card mt-4">
-    <div class="table-toolbar">
-      <h2 class="h6 mb-0"><i class="bi bi-chat-square-text me-1"></i> Visitor reviews <span class="text-muted fw-normal">({{ reviews().length }})</span></h2>
-      <span class="text-muted small">Newest first · remove anything abusive or off-topic</span>
-    </div>
-    @if (reviewsLoading()) {
-      <div class="p-3"><div class="skeleton" style="height: 48px"></div></div>
-    } @else if (reviews().length === 0) {
-      <div class="text-center text-muted py-5">No reviews have been posted yet.</div>
-    } @else {
-      <ul class="admin-reviews">
-        @for (r of reviews(); track r.id) {
-          <li>
-            <div class="admin-review-main">
-              <div class="admin-review-head">
-                <app-star-rating [value]="r.rating" size="0.85rem" />
-                <strong>{{ r.visitorName }}</strong>
-                <span class="text-muted small">on <a [routerLink]="['/places', r.placeId]">{{ r.placeName }}</a> · {{ formatDate(r.createdAtUtc) }}</span>
-              </div>
-              @if (r.comment) {
-                <p class="admin-review-text">{{ r.comment }}</p>
-              }
-            </div>
-            <button type="button" class="btn btn-outline-danger btn-icon" (click)="deleteReview(r)" title="Delete review" [attr.aria-label]="'Delete review by ' + r.visitorName">
-              <i class="bi bi-trash3"></i>
-            </button>
-          </li>
+          </div>
+          <p class="adm-foot">Showing {{ filteredPlaces().length }} of {{ admin.places().length }} places. Hiding keeps a place (and its reviews) so it can be shown again; Google’s copy of it is hidden too.</p>
         }
-      </ul>
+      </section>
     }
-  </div>
+
+    <!-- ================= Google places ================= -->
+    @case ('google') {
+      <app-admin-google-places role="tabpanel" aria-label="Google places" />
+    }
+
+    <!-- ================= Hidden ================= -->
+    @case ('hidden') {
+      <section class="surface adm-panel" role="tabpanel" aria-label="Hidden places">
+        @if (hiddenTotal() === 0) {
+          <div class="adm-empty"><i class="bi bi-eye"></i><p>Nothing is hidden — visitors see every place.</p></div>
+        } @else {
+          <div class="adm-list">
+            @for (place of admin.hiddenPlaces(); track place.id) {
+              <article class="adm-row is-hidden" [attr.data-category]="place.category">
+                <span class="adm-thumb">
+                  @if (place.imageUrl) {
+                    <img [src]="place.imageUrl" alt="" loading="lazy" />
+                  } @else {
+                    <i class="bi" [class]="categoryIcon(place.category)"></i>
+                  }
+                </span>
+                <div class="adm-main">
+                  <div class="adm-title"><a [routerLink]="['/places', place.id]">{{ place.name }}</a> <span class="adm-badge source">Your place</span></div>
+                  <div class="adm-meta"><span><i class="bi bi-geo"></i> {{ districtName(place.district) }}</span><span>Google’s copy is hidden too</span></div>
+                </div>
+                <div class="adm-actions">
+                  <button type="button" class="btn btn-sm btn-primary" (click)="toggleVisibility(place)" [disabled]="busy() === 'place-' + place.id"><i class="bi bi-eye"></i> Show again</button>
+                </div>
+              </article>
+            }
+            @for (entry of restrictions.list(); track entry.id) {
+              <article class="adm-row is-hidden">
+                <span class="adm-thumb"><i class="bi" [class]="entry.source === 'google' ? 'bi-google' : 'bi-globe2'"></i></span>
+                <div class="adm-main">
+                  <div class="adm-title">{{ entry.name }} <span class="adm-badge source">{{ entry.source === 'google' ? 'Google' : 'OpenStreetMap' }}</span></div>
+                  <div class="adm-meta"><span><i class="bi bi-geo"></i> {{ districtName(entry.district) }}</span><span>Hidden {{ formatDate(entry.createdAtUtc) }}</span></div>
+                </div>
+                <div class="adm-actions">
+                  <button type="button" class="btn btn-sm btn-primary" (click)="showExternal(entry)" [disabled]="busy() === 'ext-' + entry.id"><i class="bi bi-eye"></i> Show again</button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ================= Reviews ================= -->
+    @case ('reviews') {
+      <section class="surface adm-panel" role="tabpanel" aria-label="Visitor reviews">
+        @if (admin.reviewsLoading()) {
+          <div class="adm-list"><div class="adm-row"><div class="skeleton" style="height: 48px; grid-column: 1 / -1"></div></div></div>
+        } @else if (admin.reviews().length === 0) {
+          <div class="adm-empty"><i class="bi bi-chat-square"></i><p>No reviews have been posted yet.</p></div>
+        } @else {
+          <ul class="adm-reviews">
+            @for (r of admin.reviews(); track r.id) {
+              <li>
+                <div class="adm-review-main">
+                  <div class="adm-review-head">
+                    <app-star-rating [value]="r.rating" size="0.85rem" />
+                    <strong>{{ r.visitorName }}</strong>
+                    <span class="text-muted small">on <a [routerLink]="['/places', r.placeId]">{{ r.placeName }}</a> · {{ formatDate(r.createdAtUtc) }}</span>
+                  </div>
+                  @if (r.comment) {
+                    <p class="adm-review-text">{{ r.comment }}</p>
+                  }
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-icon" (click)="deleteReview(r)" [disabled]="busy() === 'review-' + r.id" title="Delete review" [attr.aria-label]="'Delete review by ' + r.visitorName">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  }
 </div>

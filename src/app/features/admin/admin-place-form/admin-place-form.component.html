@@ -1,4 +1,4 @@
-<div class="container section form-container">
+<div class="form-container">
   <a routerLink="/admin" class="back-link"><i class="bi bi-arrow-left"></i> Back to dashboard</a>
 
   <div class="page-head mt-3">
@@ -29,11 +29,17 @@
         </div>
         <div class="col-md-4">
           <label class="form-label" for="category">Category</label>
-          <select id="category" name="category" class="form-select" [(ngModel)]="form.category" required>
-            @for (cat of categories; track cat) {
-              <option [value]="cat">{{ cat }}</option>
-            }
-          </select>
+          <app-select inputId="category" name="category" class="d-block" [options]="categoryOptions" [(ngModel)]="form.category" required ariaLabel="Category" [searchable]="false" />
+        </div>
+        <div class="col-md-8">
+          <label class="form-label" for="district">District</label>
+          <app-select inputId="district" name="district" class="d-block" [options]="districtOptions()" [(ngModel)]="form.district" required ariaLabel="District" searchPlaceholder="Search districts…" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check mb-2">
+            <input id="isPopular" name="isPopular" type="checkbox" class="form-check-input" [(ngModel)]="form.isPopular" />
+            <label class="form-check-label" for="isPopular"><i class="bi bi-fire text-warning"></i> Popular place</label>
+          </div>
         </div>
         <div class="col-12">
           <label class="form-label" for="description">Description</label>
@@ -95,6 +101,35 @@
             Tip: right-click the place in Google Maps and copy the coordinates.
             <a [href]="previewUrl()" target="_blank" rel="noopener">Check these coordinates on a map <i class="bi bi-box-arrow-up-right"></i></a>
           </div>
+          @let check = coordinateCheck();
+          @switch (check.status) {
+            @case ('invalid') {
+              <div class="alert alert-danger py-2 small mt-2 mb-0" role="alert">
+                <i class="bi bi-exclamation-triangle me-1"></i> Enter a valid latitude and longitude.
+              </div>
+            }
+            @case ('outside') {
+              <div class="alert alert-danger py-2 small mt-2 mb-0" role="alert">
+                <i class="bi bi-exclamation-triangle me-1"></i> These coordinates are outside Sri Lanka.
+              </div>
+            }
+            @case ('ok') {
+              @if (check.farFromDistrict) {
+                <div class="alert alert-warning py-2 small mt-2 mb-0" role="alert">
+                  <i class="bi bi-exclamation-triangle me-1"></i>
+                  This point is {{ check.kmFromDistrict }} km from {{ check.districtName }} town — the nearest district capital is
+                  {{ check.nearestName }}. Check the district and coordinates.
+                </div>
+              } @else if (check.kmFromDistrict !== null) {
+                <div class="form-text">
+                  <i class="bi bi-signpost-2 me-1"></i>{{ check.kmFromDistrict }} km from {{ check.districtName }} town (straight line).
+                  @if (check.kmFromHome <= radiusKm) {
+                    Inside the {{ radiusKm }} km home area around Jaffna town.
+                  }
+                </div>
+              }
+            }
+          }
         </div>
         <div class="col-12">
           <label class="form-label" for="imageUrl">Image URL <span class="text-muted fw-normal">(optional)</span></label>
@@ -138,6 +173,34 @@
         <div class="col-md-6">
           <label class="form-label" for="travelTipsTa">Travel tips (Tamil)</label>
           <input id="travelTipsTa" name="travelTipsTa" class="form-control" [(ngModel)]="form.travelTipsTa" />
+        </div>
+      </div>
+    </div>
+
+    <div class="surface form-section">
+      <div class="section-label">
+        <span class="section-num">5</span>
+        <div>
+          <h2>Sinhala translation <span class="text-muted fw-normal">(optional)</span></h2>
+          <p>Shown when visitors switch the site to සිංහල. Leave blank to fall back to English.</p>
+        </div>
+      </div>
+      <div class="row g-3" lang="si">
+        <div class="col-12">
+          <label class="form-label" for="nameSi">Place name (Sinhala)</label>
+          <input id="nameSi" name="nameSi" class="form-control" [(ngModel)]="form.nameSi" placeholder="උදා: නල්ලූර් කන්දසාමි කෝවිල" />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="descriptionSi">Description (Sinhala)</label>
+          <textarea id="descriptionSi" name="descriptionSi" class="form-control" rows="3" [(ngModel)]="form.descriptionSi"></textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="openingHoursSi">Opening hours (Sinhala)</label>
+          <input id="openingHoursSi" name="openingHoursSi" class="form-control" [(ngModel)]="form.openingHoursSi" placeholder="පෙ.ව. 8:00 – ප.ව. 6:00 (දිනපතා)" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="travelTipsSi">Travel tips (Sinhala)</label>
+          <input id="travelTipsSi" name="travelTipsSi" class="form-control" [(ngModel)]="form.travelTipsSi" />
         </div>
       </div>
     </div>
