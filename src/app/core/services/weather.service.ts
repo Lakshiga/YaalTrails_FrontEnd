@@ -1,7 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { API_BASE_URL } from '../config';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, of, retry, timeout } from 'rxjs';
-import { PlaceSeedHome } from '../models/home-reference';
+import { HOME_LOCATION } from '../models/home-reference';
+import { LatLng } from '../utils/geo';
 
 export interface WeatherNow {
   temperature: number;
@@ -54,6 +56,20 @@ interface OpenMeteoResponse {
 
 const REFRESH_MS = 15 * 60 * 1000;
 
+/** Open-Meteo's free forecast reaches this many days ahead (today included). */
+export const FORECAST_DAYS = 16;
+
+interface ForecastState {
+  weather: Weather | null;
+  failed: boolean;
+  loading: boolean;
+}
+
+/** Forecasts are shared for points within about 1 km. */
+function locationKey(location: LatLng): string {
+  return `${location.latitude.toFixed(2)},${location.longitude.toFixed(2)}`;
+}
+
 /** WMO weather code → Bootstrap icon and translation key. */
 export function weatherInfo(code: number, isDay = true): { icon: string; key: string } {
   if (code === 0) return { icon: isDay ? 'bi-sun' : 'bi-moon-stars', key: 'wx.0' };
@@ -73,41 +89,41 @@ export function weatherInfo(code: number, isDay = true): { icon: string; key: st
 export class WeatherService {
   private http = inject(HttpClient);
 
-  readonly weather = signal<Weather | null>(null);
-  readonly failed = signal(false);
-  private loading = false;
+  private readonly states = signal<Record<string, ForecastState>>({});
 
-  /** Loads the Jaffna forecast once and refreshes it if older than 15 minutes. */
-  load(): void {
-    const current = this.weather();
-    if (this.loading || (current && Date.now() - current.fetchedAt < REFRESH_MS)) return;
-    this.loading = true;
+  /** Jaffna town forecast (home page). */
+  readonly weather = computed(() => this.weatherAt(HOME_LOCATION));
+  readonly failed = computed(() => this.failedAt(HOME_LOCATION));
+
+  weatherAt(location: LatLng): Weather | null {
+    return this.states()[locationKey(location)]?.weather ?? null;
+  }
+
+  failedAt(location: LatLng): boolean {
+    return this.states()[locationKey(location)]?.failed ?? false;
+  }
+
+  /** Loads the forecast for a location once and refreshes it if older than 15 minutes. */
+  load(location: LatLng = HOME_LOCATION): void {
+    const key = locationKey(location);
+    const current = this.states()[key];
+    if (current?.loading || (current?.weather && Date.now() - current.weather.fetchedAt < REFRESH_MS)) return;
+    this.setState(key, { weather: current?.weather ?? null, failed: false, loading: true });
 
     this.http
-      .get<OpenMeteoResponse>('https://api.open-meteo.com/v1/forecast', {
-        params: {
-          latitude: PlaceSeedHome.Latitude,
-          longitude: PlaceSeedHome.Longitude,
-          current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day',
-          hourly: 'temperature_2m,precipitation_probability,weather_code',
-          daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max',
-          timezone: 'Asia/Colombo',
-          forecast_days: 3
-        }
-      })
+      // Open-Meteo's forecast, fetched (and cached) by our backend.
+      .get<OpenMeteoResponse>(`${API_BASE_URL}/weather`, { params: { lat: location.latitude, lng: location.longitude } })
       .pipe(
         timeout(10000),
         retry({ count: 1, delay: 1500 }),
         catchError(() => of(null))
       )
       .subscribe((res) => {
-        this.loading = false;
         if (!res) {
-          this.failed.set(true);
+          this.setState(key, { weather: this.states()[key]?.weather ?? null, failed: true, loading: false });
           return;
         }
-        this.failed.set(false);
-        this.weather.set({
+        this.setState(key, { failed: false, loading: false, weather: {
           now: {
             temperature: Math.round(res.current.temperature_2m),
             feelsLike: Math.round(res.current.apparent_temperature),
@@ -133,7 +149,11 @@ export class WeatherService {
             code: res.hourly.weather_code[i]
           })),
           fetchedAt: Date.now()
-        });
+        } });
       });
+  }
+
+  private setState(key: string, state: ForecastState): void {
+    this.states.update((states) => ({ ...states, [key]: state }));
   }
 }

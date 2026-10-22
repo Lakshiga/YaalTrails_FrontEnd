@@ -1,11 +1,13 @@
-import { Component, Input, OnInit, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { WeatherService, weatherInfo } from '../../core/services/weather.service';
+import { Component, Input, computed, effect, inject, input, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { FORECAST_DAYS, WeatherService, weatherInfo } from '../../core/services/weather.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { HOME_LOCATION } from '../../core/models/home-reference';
+import { LatLng } from '../../core/utils/geo';
 
 /**
- * Jaffna weather from Open-Meteo.
- *  - variant "hero": compact current conditions for the dark home hero.
- *  - variant "day": today's forecast with an hourly strip and planning advice (planner page).
+ * Weather from Open-Meteo.
+ *  - variant "hero": compact current conditions in Jaffna for the dark home hero.
+ *  - variant "day": the forecast for a trip date and place, with an hourly strip and planning advice (planner page).
  */
 @Component({
   selector: 'app-weather-widget',
@@ -16,7 +18,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="wx-hero">
           <i class="bi wx-hero-icon" [class]="info(w.now.code, w.now.isDay).icon"></i>
           <div>
-            <div class="wx-hero-label">{{ i18n.t('weather.now') }}</div>
+            <div class="wx-hero-label">{{ placeName ? i18n.t('weather.nowAt', { place: placeName }) : i18n.t('weather.now') }}</div>
             <div class="wx-hero-temp">{{ w.now.temperature }}°C <span>{{ i18n.t(info(w.now.code, w.now.isDay).key) }}</span></div>
             <div class="wx-hero-sub">
               {{ i18n.t('weather.feels', { t: w.now.feelsLike }) }} · {{ i18n.t('weather.rainChance', { p: w.days[0].rainChance }) }}
@@ -29,17 +31,21 @@ import { I18nService } from '../../core/i18n/i18n.service';
             <div class="wx-day-title"><i class="bi bi-cloud-sun"></i> {{ i18n.t('weather.title') }}</div>
             <span class="wx-day-source">{{ i18n.t('weather.source') }}</span>
           </div>
+          @if (placeName) {
+            <div class="wx-day-place"><i class="bi bi-geo-alt"></i> {{ placeName }}</div>
+          }
+          @if (day(); as d) {
           <div class="wx-day-main">
-            <i class="bi wx-day-icon" [class]="info(w.days[0].code).icon"></i>
+            <i class="bi wx-day-icon" [class]="info(d.code).icon"></i>
             <div class="wx-day-temps">
-              <div class="wx-day-big">{{ w.days[0].max }}° <small>/ {{ w.days[0].min }}°</small></div>
-              <div class="wx-day-desc">{{ i18n.t('weather.today') }} · {{ i18n.t(info(w.days[0].code).key) }}</div>
+              <div class="wx-day-big">{{ d.max }}° <small>/ {{ d.min }}°</small></div>
+              <div class="wx-day-desc">{{ dayLabel(d.date) }} · {{ i18n.t(info(d.code).key) }}</div>
             </div>
             <dl class="wx-facts">
-              <div><dt><i class="bi bi-umbrella"></i></dt><dd>{{ w.days[0].rainChance }}%</dd></div>
-              <div><dt><i class="bi bi-sunrise"></i></dt><dd>{{ timeOf(w.days[0].sunrise) }}</dd></div>
-              <div><dt><i class="bi bi-sunset"></i></dt><dd>{{ timeOf(w.days[0].sunset) }}</dd></div>
-              <div><dt>UV</dt><dd>{{ w.days[0].uvMax }}</dd></div>
+              <div><dt><i class="bi bi-umbrella"></i></dt><dd>{{ d.rainChance }}%</dd></div>
+              <div><dt><i class="bi bi-sunrise"></i></dt><dd>{{ timeOf(d.sunrise) }}</dd></div>
+              <div><dt><i class="bi bi-sunset"></i></dt><dd>{{ timeOf(d.sunset) }}</dd></div>
+              <div><dt>UV</dt><dd>{{ d.uvMax }}</dd></div>
             </dl>
           </div>
           <div class="wx-hours">
@@ -56,6 +62,9 @@ import { I18nService } from '../../core/i18n/i18n.service';
             <i class="bi" [class]="advice().warn ? 'bi-exclamation-triangle' : 'bi-check2-circle'"></i>
             {{ advice().text }}
           </div>
+          } @else {
+            <div class="wx-advice"><i class="bi bi-calendar-x"></i> {{ i18n.t('weather.outOfRange', { days: forecastDays }) }}</div>
+          }
         </div>
       }
     } @else if (failed() && variant === 'day') {
@@ -65,7 +74,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
   changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
-      :host { display: block; }
+      :host { display: block; container-type: inline-size; }
       .wx-hero {
         display: flex; align-items: center; gap: 0.9rem;
         padding: 0.85rem 1.1rem; border-radius: var(--radius);
@@ -79,7 +88,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
       .wx-hero-sub { font-size: 0.78rem; color: rgba(255,255,255,0.7); }
 
       .wx-day { padding: 1rem 1.1rem; }
-      .wx-day-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+      .wx-day-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.15rem 0.5rem; margin-bottom: 0.75rem; }
       .wx-day-title { font-weight: 700; }
       .wx-day-title .bi { color: var(--accent); margin-right: 0.3rem; }
       .wx-day-source { font-size: 0.72rem; color: var(--muted); }
@@ -92,7 +101,9 @@ import { I18nService } from '../../core/i18n/i18n.service';
       .wx-facts div { text-align: center; }
       .wx-facts dt { color: var(--muted); font-weight: 700; font-size: 0.75rem; }
       .wx-facts dd { margin: 0; font-weight: 700; }
-      .wx-hours { display: flex; gap: 0.4rem; overflow-x: auto; margin-top: 0.9rem; padding-bottom: 0.25rem; }
+      .wx-day-place { margin-top: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+      .wx-hours { display: flex; gap: 0.4rem; overflow-x: auto; margin-top: 0.9rem; padding-bottom: 0.25rem; scroll-snap-type: x proximity; scrollbar-width: thin; }
+      .wx-hour { scroll-snap-align: start; }
       .wx-hour {
         flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
         min-width: 56px; padding: 0.5rem 0.3rem; border-radius: 12px; background: var(--line-2); font-size: 0.75rem;
@@ -109,26 +120,66 @@ import { I18nService } from '../../core/i18n/i18n.service';
       }
       .wx-advice.warn { background: var(--accent-50); color: #7a4a14; }
       .wx-unavailable { color: var(--muted); font-size: 0.9rem; }
+      /* Narrow card (phones, or the planner's side column): facts become an even row under the temperature. */
+      @container (max-width: 520px) {
+        .wx-day-head { flex-direction: column; align-items: flex-start; }
+        .wx-facts {
+          flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.25rem;
+          margin: 0.2rem 0 0; padding: 0.55rem 0.4rem; border-radius: 12px; background: var(--line-2);
+        }
+        .wx-facts dd { font-size: 0.78rem; white-space: nowrap; }
+      }
+      @container (max-width: 300px) {
+        .wx-hero { padding: 0.75rem 0.85rem; gap: 0.65rem; }
+        .wx-hero-icon { font-size: 1.7rem; }
+        .wx-hero-temp span { display: block; margin: 0; }
+        .wx-day-icon { font-size: 2.1rem; }
+      }
     `
   ]
 })
-export class WeatherWidgetComponent implements OnInit {
+export class WeatherWidgetComponent {
   private weatherService = inject(WeatherService);
   i18n = inject(I18nService);
 
   @Input() variant: 'hero' | 'day' = 'hero';
+  /** Place name shown under the title (day variant). */
+  @Input() placeName: string | null = null;
+  /** Trip date, YYYY-MM-DD (day variant); defaults to today. */
+  date = input<string | null>(null);
+  /** Where to forecast; defaults to Jaffna town. */
+  location = input<LatLng | null>(null);
   /** Planner start/end (minutes after midnight) to focus the hourly strip and advice. */
   fromMinutes = input(8 * 60);
   toMinutes = input(18 * 60);
 
-  weather = this.weatherService.weather;
-  failed = this.weatherService.failed;
+  readonly forecastDays = FORECAST_DAYS;
+  private place = computed(() => this.location() ?? HOME_LOCATION);
+  weather = computed(() => this.weatherService.weatherAt(this.place()));
+  failed = computed(() => this.weatherService.failedAt(this.place()));
   info = weatherInfo;
+
+  /** The forecast day for the trip date, or null when the date is beyond the forecast range. */
+  day = computed(() => {
+    const w = this.weather();
+    if (!w) return null;
+    const date = this.date();
+    return date ? (w.days.find((d) => d.date === date) ?? null) : w.days[0];
+  });
+
+  constructor() {
+    // Fetch (or reuse) the forecast whenever the location changes.
+    effect(() => {
+      const place = this.place();
+      untracked(() => this.weatherService.load(place));
+    });
+  }
 
   dayHours = computed(() => {
     const w = this.weather();
-    if (!w) return [];
-    const today = w.days[0].date;
+    const day = this.day();
+    if (!w || !day) return [];
+    const today = day.date;
     const fromHour = Math.floor(this.fromMinutes() / 60);
     const toHour = Math.min(23, Math.ceil(this.toMinutes() / 60));
     return w.hours.filter((h) => {
@@ -148,8 +199,11 @@ export class WeatherWidgetComponent implements OnInit {
     return { warn: false, text: this.i18n.t('weather.allGood') };
   });
 
-  ngOnInit(): void {
-    this.weatherService.load();
+  /** "Today", or the date written out. */
+  dayLabel(date: string): string {
+    const w = this.weather();
+    if (w && date === w.days[0].date) return this.i18n.t('weather.today');
+    return this.i18n.date(`${date}T00:00:00`, { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
   timeOf(iso: string): string {
