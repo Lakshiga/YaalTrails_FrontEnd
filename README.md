@@ -51,7 +51,7 @@ npm start                 # http://localhost:4200
 | `NG_APP_API_BASE_URL` | Backend API, e.g. `http://localhost:5001/api` |
 | `NG_APP_GOOGLE_MAPS_API_KEY` | Optional browser key; leave empty to use OpenStreetMap |
 | `NG_APP_GOOGLE_MAP_ID` | Map ID for Google markers (`DEMO_MAP_ID` for development) |
-| `NG_APP_CLIENT_ID` / `NG_APP_CLIENT_SECRET` | Web client credentials registered in the backend (`ClientAuth` section) |
+| `NG_APP_CLIENT_ID` / `NG_APP_CLIENT_SECRET` | Web client credentials registered in the backend (`ClientAuth` section). `.env.example` ships the local demo client `yaal-dev` / `yaal-dev-secret`, which the backend accepts only in Development |
 
 `npm start`, `npm run build` and `npm test` run `scripts/set-env.mjs` first, which turns `.env` into
 `src/environments/env.generated.ts` (git-ignored).
